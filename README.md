@@ -11,6 +11,25 @@ npm run dev
 
 Then open [http://localhost:3000](http://localhost:3000).
 
+## Docker and Dokploy
+
+The production image uses Next.js standalone output and runs as the non-root `nextjs` user:
+
+```bash
+docker build -t task-board .
+docker run --rm -p 3000:3000 task-board
+```
+
+For Dokploy, create an application from the Git repository and use:
+
+- Build type: **Dockerfile**
+- Dockerfile path: `Dockerfile`
+- Build context: repository root (`.`)
+- Container port: `3000`
+- Health-check path: `/`
+
+No persistent server volume is required. Task data, query favorites, settings, and history are intentionally stored in each browser's versioned `localStorage`. Dokploy can terminate TLS and proxy the public domain to container port 3000.
+
 Verification commands:
 
 ```bash
