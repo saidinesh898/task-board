@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { STATUS_LABELS, type Task, type TaskStatus } from "@/features/tasks/types"
+import { STATUS_LABELS, type PresenceEntry, type Task, type TaskStatus } from "@/features/tasks/types"
 import { TaskCard } from "./task-card"
 
 const dotStyle: Record<TaskStatus, string> = {
@@ -15,11 +15,13 @@ const dotStyle: Record<TaskStatus, string> = {
   done: "bg-emerald-500",
 }
 
-export function TaskColumn({ status, tasks, pendingIds, onStatusChange }: {
+export function TaskColumn({ status, tasks, pendingIds, onStatusChange, presenceByTask, lockedByTask }: {
   status: TaskStatus
   tasks: Task[]
   pendingIds: Set<string>
   onStatusChange: (task: Task, status: TaskStatus) => void
+  presenceByTask: Map<string, PresenceEntry[]>
+  lockedByTask: Map<string, string>
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
   const droppable = useDroppable({ id: `column-${status}`, data: { status } })
@@ -52,7 +54,7 @@ export function TaskColumn({ status, tasks, pendingIds, onStatusChange }: {
                   className="absolute left-0 top-0 w-full pb-3"
                   style={{ transform: `translateY(${row.start}px)` }}
                 >
-                  <TaskCard task={task} pending={pendingIds.has(task.id)} onStatusChange={onStatusChange} />
+                  <TaskCard task={task} pending={pendingIds.has(task.id)} onStatusChange={onStatusChange} presence={presenceByTask.get(task.id)} lockedBy={lockedByTask.get(task.id)} />
                 </div>
               )
             })}

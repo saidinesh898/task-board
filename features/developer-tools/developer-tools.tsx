@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Activity, Bug, ChevronDown, ChevronUp, FlaskConical, Play, RotateCcw, Trash2 } from "lucide-react"
+import { Activity, Bug, ChevronDown, ChevronUp, FlaskConical, Play, RotateCcw, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -25,6 +25,14 @@ export function DeveloperTools() {
   }, [state.autoSimulation])
   const countdown = state.nextSimulationAt ? Math.max(0, Math.ceil((state.nextSimulationAt - now) / 1000)) : null
   const last = state.events[0]
+  const remoteActor = state.remoteUser !== "random" && state.remoteUser !== state.activeUser
+    ? state.remoteUser
+    : PEOPLE.find((person) => person !== state.activeUser)!
+  const targetTask = tasks.find((task) => task.id === state.targetTaskId) ?? tasks[0]
+  const setRemotePresence = (mode: "viewing" | "editing") => {
+    if (!targetTask) return
+    state.upsertPresence({ user: remoteActor, taskId: targetTask.id, mode, remote: true, updatedAt: new Date().toISOString() })
+  }
   return (
     <section className="border-y bg-slate-950 text-slate-100 dark:bg-slate-900">
       <div className="mx-auto max-w-[1600px] px-4">
@@ -46,10 +54,16 @@ export function DeveloperTools() {
               <Button size="sm" variant="secondary" onClick={() => triggerRemote("manual")}><Play />Trigger update</Button>
               <Button size="sm" variant="secondary" disabled={!state.selectedTaskId || !state.draftDirty} onClick={() => triggerRemote("conflict", state.selectedTaskId ?? undefined)}><Bug />Trigger conflict</Button>
             </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setRemotePresence("viewing")}><Users />Set viewing presence</Button>
+              <Button size="sm" variant="secondary" onClick={() => setRemotePresence("editing")}><UserRoundCheck />Set editing presence</Button>
+              <Button size="sm" variant="ghost" onClick={() => state.removePresence(remoteActor)}>Release presence</Button>
+            </div>
             <div className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2"><Switch checked={state.autoSimulation} onCheckedChange={(value) => { state.setDevOption("autoSimulation", value); state.setDevOption("nextSimulationAt", null) }} /><span className="text-xs">Auto simulation {state.autoSimulation ? `· next in ${countdown ?? "…"}s` : "paused"}</span></div>
           </DevGroup>
           <DevGroup title="Network and data">
             <DevSelect label="Next response" value={state.failureMode} onChange={(value) => state.setDevOption("failureMode", value)} options={[["random", "Random · 10% fail"], ["success", "Force next success"], ["failure", "Force next failure"]]} />
+            <div className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2"><Switch aria-label="Simulate offline network" checked={state.forcedOffline} onCheckedChange={(value) => state.setDevOption("forcedOffline", value)} /><WifiOff className="size-3.5" /><span className="text-xs">Simulated network {state.forcedOffline ? "offline" : "online"}</span></div>
             <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" onClick={() => resetDataset(state.datasetSize === 30 ? 1000 : 30)}>{state.datasetSize === 30 ? "Load 1,000 tasks" : "Load 30 tasks"}</Button><Button size="sm" variant="ghost" onClick={state.clearEvents}><Trash2 />Clear log</Button><Button size="sm" variant="ghost" onClick={() => { if (confirm("Reset all local task-board data?")) { localStorage.removeItem("task-board:query-cache:v1"); state.resetClient(); resetDataset(30) } }}><RotateCcw />Reset</Button></div>
             <div className="max-h-20 overflow-auto text-[11px] text-slate-400">{state.events.slice(0, 4).map((event) => <div key={event.id}>{new Date(event.timestamp).toLocaleTimeString()} · {event.actor} · {event.result}</div>)}</div>
           </DevGroup>

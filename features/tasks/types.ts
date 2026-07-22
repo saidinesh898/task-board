@@ -54,6 +54,7 @@ export interface PendingOperation {
   dueAt: number
   recordHistory: boolean
   historyEntryId?: string
+  waitForConnection?: boolean
 }
 
 export type FailureMode = "random" | "success" | "failure"
@@ -79,9 +80,17 @@ export interface SimulationEvent {
 
 export interface EditConflict {
   taskId: string
-  baseVersion: number
+  base: Task
   incoming: Task
   changedFields: Array<keyof TaskDraft>
+}
+
+export interface PresenceEntry {
+  user: string
+  taskId: string
+  mode: "viewing" | "editing"
+  updatedAt: string
+  remote: boolean
 }
 
 export const PEOPLE = ["You", "Alex Morgan", "Priya Shah", "Jordan Lee"] as const
@@ -90,7 +99,6 @@ export const PRIORITIES: Priority[] = ["low", "medium", "high"]
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "Todo",
-  "in-progress": "In progress",
+  "in-progress": "In Progress",
   done: "Done",
 }
-

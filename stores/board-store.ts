@@ -7,7 +7,9 @@ import type {
   FailureMode,
   HistoryEntry,
   PendingOperation,
+  PresenceEntry,
   Priority,
+  Task,
   SimulationEvent,
   SimulationField,
   TaskDraft,
@@ -35,9 +37,12 @@ interface BoardState {
   failureMode: FailureMode
   datasetSize: 30 | 1000
   draft: TaskDraft | null
-  draftBaseVersion: number | null
+  draftBaseTask: Task | null
   draftDirty: boolean
   conflict: EditConflict | null
+  presence: PresenceEntry[]
+  networkOnline: boolean
+  forcedOffline: boolean
   past: HistoryEntry[]
   future: HistoryEntry[]
   pending: PendingOperation[]
@@ -55,14 +60,18 @@ interface BoardState {
   setShortcutsOpen: (open: boolean) => void
   toggleDev: () => void
   setDevOption: (key: string, value: string | boolean | number | null) => void
-  setDraft: (draft: TaskDraft | null, version?: number | null, dirty?: boolean) => void
+  setDraft: (draft: TaskDraft | null, baseTask?: Task | null, dirty?: boolean) => void
   updateDraft: (patch: Partial<TaskDraft>) => void
   setConflict: (conflict: EditConflict | null) => void
+  upsertPresence: (entry: PresenceEntry) => void
+  removePresence: (user: string) => void
+  setNetworkOnline: (online: boolean) => void
   addHistory: (entry: HistoryEntry) => void
   removeHistory: (operationId: string) => void
   takeUndo: () => HistoryEntry | null
   takeRedo: () => HistoryEntry | null
   addPending: (operation: PendingOperation) => void
+  updatePending: (id: string, patch: Partial<PendingOperation>) => void
   removePending: (id: string) => void
   addEvent: (event: SimulationEvent) => void
   clearEvents: () => void
@@ -91,9 +100,12 @@ const initial = {
   failureMode: "random" as const,
   datasetSize: 30 as const,
   draft: null,
-  draftBaseVersion: null,
+  draftBaseTask: null,
   draftDirty: false,
   conflict: null,
+  presence: [] as PresenceEntry[],
+  networkOnline: true,
+  forcedOffline: false,
   past: [] as HistoryEntry[],
   future: [] as HistoryEntry[],
   pending: [] as PendingOperation[],
@@ -127,11 +139,16 @@ export const useBoardStore = create<BoardState>()(
       setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
       toggleDev: () => set((state) => ({ devOpen: !state.devOpen })),
       setDevOption: (key, value) => set({ [key]: value } as Partial<BoardState>),
-      setDraft: (draft, version = null, dirty = false) =>
-        set({ draft, draftBaseVersion: version, draftDirty: dirty }),
+      setDraft: (draft, baseTask = null, dirty = false) =>
+        set({ draft, draftBaseTask: baseTask, draftDirty: dirty }),
       updateDraft: (patch) =>
         set((state) => ({ draft: state.draft ? { ...state.draft, ...patch } : null, draftDirty: true })),
       setConflict: (conflict) => set({ conflict }),
+      upsertPresence: (entry) => set((state) => ({
+        presence: [...state.presence.filter((item) => item.user !== entry.user), entry],
+      })),
+      removePresence: (user) => set((state) => ({ presence: state.presence.filter((item) => item.user !== user) })),
+      setNetworkOnline: (networkOnline) => set({ networkOnline }),
       addHistory: (entry) =>
         set((state) => ({ past: [...state.past, entry].slice(-50), future: [] })),
       removeHistory: (operationId) =>
@@ -150,6 +167,9 @@ export const useBoardStore = create<BoardState>()(
       },
       addPending: (operation) =>
         set((state) => ({ pending: [...state.pending.filter((item) => item.id !== operation.id), operation] })),
+      updatePending: (id, patch) => set((state) => ({
+        pending: state.pending.map((operation) => operation.id === id ? { ...operation, ...patch } : operation),
+      })),
       removePending: (id) => set((state) => ({ pending: state.pending.filter((item) => item.id !== id) })),
       addEvent: (event) => set((state) => ({ events: [event, ...state.events].slice(0, 30) })),
       clearEvents: () => set({ events: [] }),
@@ -184,9 +204,10 @@ export const useBoardStore = create<BoardState>()(
         failureMode: state.failureMode,
         datasetSize: state.datasetSize,
         draft: state.draft,
-        draftBaseVersion: state.draftBaseVersion,
+        draftBaseTask: state.draftBaseTask,
         draftDirty: state.draftDirty,
         conflict: state.conflict,
+        forcedOffline: state.forcedOffline,
         past: state.past,
         future: state.future,
         pending: state.pending,

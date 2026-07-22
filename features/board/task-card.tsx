@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { STATUS_LABELS, STATUSES, type Task } from "@/features/tasks/types"
+import { STATUS_LABELS, STATUSES, type PresenceEntry, type Task } from "@/features/tasks/types"
 import { useBoardStore } from "@/stores/board-store"
 import { formatTaskDate } from "@/features/tasks/format"
+import { PresenceIndicators } from "@/features/collaboration/presence-indicators"
 
 const priorityStyle = {
   high: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300",
@@ -19,13 +20,15 @@ const priorityStyle = {
   low: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300",
 }
 
-export const TaskCard = memo(function TaskCard({ task, pending, onStatusChange }: {
+export const TaskCard = memo(function TaskCard({ task, pending, onStatusChange, presence = [], lockedBy }: {
   task: Task
   pending: boolean
   onStatusChange: (task: Task, status: Task["status"]) => void
+  presence?: PresenceEntry[]
+  lockedBy?: string
 }) {
   const setSelected = useBoardStore((state) => state.setSelectedTaskId)
-  const sortable = useSortable({ id: task.id, data: { task } })
+  const sortable = useSortable({ id: task.id, data: { task }, disabled: Boolean(lockedBy) })
   const style = { transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }
   return (
     <div ref={sortable.setNodeRef} style={style} className={cn(sortable.isDragging && "opacity-30")}>
@@ -42,7 +45,8 @@ export const TaskCard = memo(function TaskCard({ task, pending, onStatusChange }
               variant="ghost"
               size="icon-sm"
               className="-ml-2 mt-[-3px] shrink-0 touch-none text-muted-foreground opacity-60 group-hover:opacity-100"
-              aria-label={`Drag ${task.title}`}
+              aria-label={lockedBy ? `${task.title} is locked by ${lockedBy}` : `Drag ${task.title}`}
+              disabled={Boolean(lockedBy)}
             ><GripVertical /></Button>
             <button className="min-w-0 flex-1 text-left" onClick={() => setSelected(task.id)}>
               <div className="flex items-start justify-between gap-2">
@@ -56,12 +60,16 @@ export const TaskCard = memo(function TaskCard({ task, pending, onStatusChange }
             <Badge variant="outline" className={cn("capitalize", priorityStyle[task.priority])}>{task.priority}</Badge>
             {task.tags.slice(0, 2).map((tag) => <Badge variant="secondary" key={tag}>{tag}</Badge>)}
           </div>
+          <div className="mt-2 flex min-h-6 items-center justify-between gap-2">
+            <PresenceIndicators entries={presence} />
+            {lockedBy && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">Locked by {lockedBy}</span>}
+          </div>
           <div className="mt-3 flex items-center justify-between gap-2 border-t pt-2.5 text-[11px] text-muted-foreground">
             <span className="flex min-w-0 items-center gap-1"><CircleUserRound className="size-3.5" /><span className="truncate">{task.assignee}</span></span>
             <span className="flex shrink-0 items-center gap-1" title={formatTaskDate(task.createdAt, true)}><CalendarDays className="size-3.5" />{formatTaskDate(task.createdAt)}</span>
           </div>
           <div className="mt-2">
-            <Select value={task.status} onValueChange={(status) => status && onStatusChange(task, status)}>
+            <Select items={STATUS_LABELS} disabled={Boolean(lockedBy)} value={task.status} onValueChange={(status) => status && onStatusChange(task, status)}>
               <SelectTrigger className="h-7 w-full text-xs" aria-label={`Change status for ${task.title}`}><SelectValue /></SelectTrigger>
               <SelectContent>{STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent>
             </Select>

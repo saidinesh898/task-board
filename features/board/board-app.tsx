@@ -1,11 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import * as m from "motion/react-m"
 import { useTheme } from "next-themes"
-import { Briefcase, GitBranch, Keyboard, Laptop, Mail, Moon, Plus, Redo2, Sun, Undo2, Zap } from "lucide-react"
+import { Keyboard, Laptop, Mail, Moon, Plus, Redo2, Sun, Undo2, Zap } from "lucide-react"
+import { FaGithub, FaLinkedin } from "react-icons/fa"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -24,6 +26,7 @@ import { TaskDetailsSheet } from "./task-details-sheet"
 import { filterTasks } from "@/features/tasks/selectors"
 import { compileTaskQuery } from "@/features/query-builder/query-engine"
 import { useQueryUrlSync } from "@/features/query-builder/use-query-url-sync"
+import { NetworkStatus } from "@/features/collaboration/network-status"
 
 export function BoardApp() { return <TaskOperationsProvider><BoardExperience /></TaskOperationsProvider> }
 
@@ -36,6 +39,8 @@ function BoardExperience() {
   const pending = useBoardStore((state) => state.pending)
   const past = useBoardStore((state) => state.past)
   const future = useBoardStore((state) => state.future)
+  const presence = useBoardStore((state) => state.presence)
+  const activeUser = useBoardStore((state) => state.activeUser)
   const setCreateOpen = useBoardStore((state) => state.setCreateOpen)
   const setShortcutsOpen = useBoardStore((state) => state.setShortcutsOpen)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
@@ -47,8 +52,25 @@ function BoardExperience() {
   const filtered = useMemo(() => filterTasks(tasks, { search, assignee, priority }, advancedPredicate), [advancedPredicate, assignee, priority, search, tasks])
   const grouped = useMemo(() => Object.fromEntries(STATUSES.map((status) => [status, filtered.filter((task) => task.status === status).sort((a, b) => a.position - b.position)])) as Record<TaskStatus, Task[]>, [filtered])
   const pendingIds = useMemo(() => new Set(pending.map((operation) => operation.taskId)), [pending])
+  const presenceByTask = useMemo(() => {
+    const result = new Map<string, typeof presence>()
+    presence.forEach((entry) => result.set(entry.taskId, [...(result.get(entry.taskId) ?? []), entry]))
+    return result
+  }, [presence])
+  const lockedByTask = useMemo(() => {
+    const result = new Map<string, string>()
+    presence.forEach((entry) => {
+      if (entry.mode === "editing" && entry.user !== activeUser) result.set(entry.taskId, entry.user)
+    })
+    return result
+  }, [activeUser, presence])
 
-  const moveTask = (task: Task, status: TaskStatus, overTask?: Task) => {
+  const moveTask = useCallback((task: Task, status: TaskStatus, overTask?: Task) => {
+    const lockedBy = lockedByTask.get(task.id)
+    if (lockedBy) {
+      toast.warning(`Task is locked by ${lockedBy}`)
+      return
+    }
     if (task.status === status && overTask?.id === task.id) return
     const ordered = tasks.filter((item) => item.status === status && item.id !== task.id).sort((a, b) => a.position - b.position)
     let index = overTask ? ordered.findIndex((item) => item.id === overTask.id) : ordered.length
@@ -57,7 +79,7 @@ function BoardExperience() {
     const after = ordered[index]
     const position = before && after ? (before.position + after.position) / 2 : before ? before.position + 1000 : after ? after.position - 1000 : 0
     execute(task, { ...task, status, position }, status === task.status ? `Reorder “${task.title}”` : `Move “${task.title}” to ${status}`, { kind: "update" })
-  }
+  }, [execute, lockedByTask, tasks])
   const onDragEnd = (event: DragEndEvent) => {
     setActiveTask(null)
     if (!event.over) return
@@ -71,13 +93,14 @@ function BoardExperience() {
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,var(--color-muted),transparent_35%)]">
     <AppHeader undo={undo} redo={redo} undoLabel={past.at(-1)?.label} redoLabel={future.at(-1)?.label} onCreate={() => setCreateOpen(true)} onShortcuts={() => setShortcutsOpen(true)} />
+    <NetworkStatus />
     <DeveloperTools />
     <main className="mx-auto max-w-[1600px] space-y-4 px-4 py-5 sm:px-6">
       <div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Thomson Reuters Board</h1><p className="mt-1 text-sm text-muted-foreground">Optimistic, collaborative, and designed to stay fast at 1,000+ tasks.</p></div>
       <BoardFilters resultCount={filtered.length} totalCount={tasks.length} />
       {isLoading ? <LoadingBoard /> : <DndContext id="task-board-dnd" sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveTask(null)} accessibility={{ announcements: { onDragStart: ({ active }) => `Picked up ${tasks.find((task) => task.id === active.id)?.title}`, onDragOver: ({ over }) => over ? `Over ${over.id}` : undefined, onDragEnd: () => "Task dropped", onDragCancel: () => "Drag cancelled" } }}>
-        <div className="flex snap-x gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-3 lg:overflow-visible">{STATUSES.map((status) => <div key={status} className="snap-center"><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} /></div>)}</div>
-        <DragOverlay>{activeTask && <m.div initial={{ scale: .98, opacity: .7 }} animate={{ scale: 1.02, opacity: 1 }} className="w-[360px] rotate-1 shadow-2xl"><TaskCard task={activeTask} pending={pendingIds.has(activeTask.id)} onStatusChange={moveTask} /></m.div>}</DragOverlay>
+        <div className="flex snap-x gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-3 lg:overflow-visible">{STATUSES.map((status) => <div key={status} className="snap-center"><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} presenceByTask={presenceByTask} lockedByTask={lockedByTask} /></div>)}</div>
+        <DragOverlay dropAnimation={null}>{activeTask && <m.div initial={{ scale: .98, opacity: .7 }} animate={{ scale: 1.02, opacity: 1 }} className="w-[360px] rotate-1 shadow-2xl"><TaskCard task={activeTask} pending={pendingIds.has(activeTask.id)} onStatusChange={moveTask} presence={presenceByTask.get(activeTask.id)} lockedBy={lockedByTask.get(activeTask.id)} /></m.div>}</DragOverlay>
       </DndContext>}
     </main>
     <AppFooter />
@@ -109,8 +132,8 @@ function AppFooter() {
       <p className="font-medium text-foreground">Sai Dinesh</p>
       <nav aria-label="Owner contact links" className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <a className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground" href="mailto:sai_dinesh@epam.com"><Mail className="size-4" />sai_dinesh@epam.com</a>
-        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground" href="https://github.com/saidinesh898/task-board" target="_blank" rel="noreferrer"><GitBranch className="size-4" />GitHub</a>
-        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground" href="https://www.linkedin.com/in/saidineshkumar/" target="_blank" rel="noreferrer"><Briefcase className="size-4" />LinkedIn</a>
+        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground" href="https://github.com/saidinesh898/task-board" target="_blank" rel="noreferrer"><FaGithub className="size-4" aria-hidden="true" />GitHub</a>
+        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-[#0a66c2]" href="https://www.linkedin.com/in/saidineshkumar/" target="_blank" rel="noreferrer"><FaLinkedin className="size-4" aria-hidden="true" />LinkedIn</a>
       </nav>
     </div>
   </footer>

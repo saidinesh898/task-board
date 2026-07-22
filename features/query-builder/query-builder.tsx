@@ -114,5 +114,5 @@ function ConditionValue({ condition, onChange }: { condition: QueryCondition; on
 }
 
 function ValueSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<readonly [string, string]> }) {
-  return <Select value={value} onValueChange={(next) => next && onChange(next)}><SelectTrigger aria-label={label} className="w-full"><SelectValue /></SelectTrigger><SelectContent>{options.map(([option, text]) => <SelectItem key={option} value={option} className="capitalize">{text}</SelectItem>)}</SelectContent></Select>
+  return <Select items={Object.fromEntries(options)} value={value} onValueChange={(next) => next && onChange(next)}><SelectTrigger aria-label={label} className="w-full"><SelectValue /></SelectTrigger><SelectContent>{options.map(([option, text]) => <SelectItem key={option} value={option} className="capitalize">{text}</SelectItem>)}</SelectContent></Select>
 }

@@ -6,12 +6,15 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useBoardStore } from "@/stores/board-store"
 import { useTaskOperations } from "@/features/tasks/task-operations"
 import type { Task, TaskDraft } from "@/features/tasks/types"
 import { TaskForm } from "./task-form"
 import { formatTaskDate } from "@/features/tasks/format"
+import { mergeDescription } from "@/features/collaboration/description-crdt"
 
 const draftKeys: Array<keyof TaskDraft> = ["title", "description", "status", "priority", "assignee", "tags"]
 
@@ -28,21 +31,45 @@ export function TaskDetailsSheet() {
   const setDraft = useBoardStore((state) => state.setDraft)
   const updateDraft = useBoardStore((state) => state.updateDraft)
   const setConflict = useBoardStore((state) => state.setConflict)
-  const { tasks, execute } = useTaskOperations()
+  const presence = useBoardStore((state) => state.presence)
+  const activeUser = useBoardStore((state) => state.activeUser)
+  const upsertPresence = useBoardStore((state) => state.upsertPresence)
+  const removePresence = useBoardStore((state) => state.removePresence)
+  const devOpen = useBoardStore((state) => state.devOpen)
+  const { tasks, execute, triggerRemote } = useTaskOperations()
   const task = tasks.find((item) => item.id === selectedTaskId) ?? null
   const [resolveOpen, setResolveOpen] = useState(false)
+  const [manualMode, setManualMode] = useState(false)
+  const [manualDescription, setManualDescription] = useState("")
   const [choices, setChoices] = useState<Partial<Record<keyof TaskDraft, "mine" | "theirs">>>({})
+  const lockedBy = presence.find((entry) => entry.taskId === selectedTaskId && entry.mode === "editing" && entry.user !== activeUser)?.user
 
   useEffect(() => {
-    if (task && (!draft || !draftDirty)) setDraft(toDraft(task), task.version, false)
+    if (task && (!draft || !draftDirty)) setDraft(toDraft(task), task, false)
     // Draft initialization intentionally keys to the selected task rather than each live task update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTaskId])
+
+  useEffect(() => {
+    if (!selectedTaskId) {
+      removePresence(activeUser)
+      return
+    }
+    upsertPresence({
+      user: activeUser,
+      taskId: selectedTaskId,
+      mode: draftDirty ? "editing" : "viewing",
+      remote: false,
+      updatedAt: new Date().toISOString(),
+    })
+    return () => removePresence(activeUser)
+  }, [activeUser, draftDirty, removePresence, selectedTaskId, upsertPresence])
 
   const save = () => {
     if (!task || !draft) return
     if (conflict?.taskId === task.id) {
       setChoices(Object.fromEntries(conflict.changedFields.map((key) => [key, "mine"])))
+      setManualMode(false)
       setResolveOpen(true)
       return
     }
@@ -51,7 +78,7 @@ export function TaskDetailsSheet() {
   const submit = (before: Task, nextDraft: TaskDraft, prefix: string) => {
     const after = { ...before, ...nextDraft }
     execute(before, after, `${prefix} “${before.title}”`, { kind: prefix === "Resolve" ? "resolve" : "update" })
-    setDraft(nextDraft, before.version + 1, false)
+    setDraft(nextDraft, { ...before, ...nextDraft }, false)
     setConflict(null)
     setResolveOpen(false)
   }
@@ -59,6 +86,28 @@ export function TaskDetailsSheet() {
     if (!draft || !conflict) return draft
     return Object.fromEntries(draftKeys.map((key) => [key, choices[key] === "theirs" ? conflict.incoming[key] : draft[key]])) as TaskDraft
   }, [choices, conflict, draft])
+
+  const openManualMerge = () => {
+    if (!conflict || !draft) return
+    setManualDescription(mergeDescription({
+      // Older persisted v1 conflicts stored only a base version. Fall back to
+      // the live task so those drafts can still open the new merge workflow.
+      base: conflict.base?.description ?? task?.description ?? conflict.incoming.description,
+      mine: draft.description,
+      theirs: conflict.incoming.description,
+      mineActor: activeUser,
+      theirsActor: conflict.incoming.updatedBy,
+    }))
+    setManualMode(true)
+  }
+
+  const takeTheirs = () => {
+    if (!conflict) return
+    setDraft(toDraft(conflict.incoming), conflict.incoming, false)
+    setConflict(null)
+    setResolveOpen(false)
+    setManualMode(false)
+  }
 
   return (
     <>
@@ -72,7 +121,9 @@ export function TaskDetailsSheet() {
           </SheetHeader>
           <div className="space-y-4 px-4 pb-8">
             {conflict && <Alert variant="destructive"><AlertTriangle /><AlertTitle>Newer remote version</AlertTitle><AlertDescription>{conflict.incoming.updatedBy} changed this task while you were editing. Saving will open a comparison.</AlertDescription></Alert>}
-            {task && draft && <TaskForm value={draft} onChange={updateDraft} onSubmit={save} submitLabel={conflict ? "Review and save" : "Save changes"} />}
+            {lockedBy && <Alert><AlertTriangle /><AlertTitle>Editing locked by {lockedBy}</AlertTitle><AlertDescription>You can view this task, but editing controls will unlock only after they leave or stop editing.</AlertDescription></Alert>}
+            {task && draft && <TaskForm disabled={Boolean(lockedBy)} value={draft} onChange={updateDraft} onSubmit={save} submitLabel={conflict ? "Review and save" : "Save changes"} />}
+            {devOpen && task && draftDirty && !conflict && <Button variant="outline" className="w-full" onClick={() => triggerRemote("conflict", task.id)}><AlertTriangle />Simulate remote conflict</Button>}
             {task && <div className="flex items-center gap-2 rounded-xl bg-muted p-3 text-xs text-muted-foreground"><History className="size-4" />Version {task.version} · Updated {formatTaskDate(task.updatedAt, true)} UTC</div>}
           </div>
         </SheetContent>
@@ -81,25 +132,30 @@ export function TaskDetailsSheet() {
       <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle>Resolve task conflict</DialogTitle><DialogDescription>Choose which version to keep. This saves as one undoable optimistic action.</DialogDescription></DialogHeader>
-          {conflict && draft && <div className="space-y-3">
+          {manualMode && conflict && draft && <div className="space-y-3">
             {conflict.changedFields.map((field) => (
               <div key={field} className="rounded-xl border p-3">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{field}</div>
-                <div className="grid gap-2 sm:grid-cols-2">
+                {field === "description" ? <div className="space-y-2">
+                  <Label htmlFor="merged-description">Merged description</Label>
+                  <Textarea id="merged-description" aria-label="Merged description" rows={7} value={manualDescription} onChange={(event) => setManualDescription(event.target.value)} />
+                  <p className="text-xs text-muted-foreground">Concurrent sentence blocks were reconciled deterministically. Review or edit the result before saving.</p>
+                </div> : <div className="grid gap-2 sm:grid-cols-2">
                   <Choice active={choices[field] !== "theirs"} label="Mine" value={draft[field]} onClick={() => setChoices((value) => ({ ...value, [field]: "mine" }))} />
                   <Choice active={choices[field] === "theirs"} label={`Theirs · ${conflict.incoming.updatedBy}`} value={conflict.incoming[field]} onClick={() => setChoices((value) => ({ ...value, [field]: "theirs" }))} />
-                </div>
+                </div>}
               </div>
             ))}
           </div>}
           <DialogFooter className="flex-wrap">
-            <Button variant="outline" onClick={() => {
-              if (!conflict) return
-              setDraft(toDraft(conflict.incoming), conflict.incoming.version, false)
-              setConflict(null); setResolveOpen(false)
-            }}>Take theirs</Button>
-            <Button variant="secondary" onClick={() => conflict && draft && submit(conflict.incoming, draft, "Resolve")}>Keep mine</Button>
-            <Button onClick={() => conflict && reviewedDraft && submit(conflict.incoming, reviewedDraft, "Resolve")}>Save reviewed fields</Button>
+            {!manualMode ? <>
+              <Button variant="outline" onClick={takeTheirs}>Take theirs</Button>
+              <Button variant="secondary" onClick={() => conflict && draft && submit(conflict.incoming, draft, "Resolve")}>Keep mine</Button>
+              <Button onClick={openManualMerge}>Merge manually</Button>
+            </> : <>
+              <Button variant="outline" onClick={() => setManualMode(false)}>Back</Button>
+              <Button onClick={() => conflict && reviewedDraft && submit(conflict.incoming, { ...reviewedDraft, description: manualDescription }, "Resolve")}>Save manual merge</Button>
+            </>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

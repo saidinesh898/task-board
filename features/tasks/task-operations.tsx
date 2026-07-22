@@ -62,6 +62,30 @@ function changedDraftFields(before: Task, after: Task): Array<keyof TaskDraft> {
   return keys.filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]))
 }
 
+function toDraft(task: Task): TaskDraft {
+  return {
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+    assignee: task.assignee,
+    tags: task.tags,
+  }
+}
+
+function waitForConnection() {
+  const current = useBoardStore.getState()
+  if (current.networkOnline && !current.forcedOffline) return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    const unsubscribe = useBoardStore.subscribe((state) => {
+      if (state.networkOnline && !state.forcedOffline) {
+        unsubscribe()
+        resolve()
+      }
+    })
+  })
+}
+
 export function TaskOperationsProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const query = useQuery({
@@ -74,11 +98,19 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
   const hydrated = useBoardStore((state) => state.hydrated)
   const autoSimulation = useBoardStore((state) => state.autoSimulation)
   const nextSimulationAt = useBoardStore((state) => state.nextSimulationAt)
+  const networkOnline = useBoardStore((state) => state.networkOnline)
+  const forcedOffline = useBoardStore((state) => state.forcedOffline)
+  const connected = networkOnline && !forcedOffline
 
   const mutation = useMutation({
     mutationFn: async (operation: PendingOperation) => {
       runtimeActive.add(operation.id)
       await sleepUntil(operation.dueAt)
+      const store = useBoardStore.getState()
+      if (!store.networkOnline || store.forcedOffline) {
+        await waitForConnection()
+        await sleepUntil(Date.now() + 2_000)
+      }
       if (operation.outcome === "failure") throw new Error("The simulated request failed")
       return commitOperation(operation)
     },
@@ -124,6 +156,7 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
         outcome: options.outcome ?? store.consumeOutcome(),
         dueAt: Date.now() + 2_000,
         recordHistory: options.recordHistory ?? true,
+        waitForConnection: !store.networkOnline || store.forcedOffline,
       } satisfies PendingOperation
 
       if (!options.existing) {
@@ -142,7 +175,8 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
       }
       const confirmed = loadConfirmedTasks()
       queryClient.setQueryData(TASKS_KEY, reconcilePending(confirmed, useBoardStore.getState().pending))
-      mutation.mutate(operation)
+      if (store.networkOnline && !store.forcedOffline) mutation.mutate(operation)
+      else toast.warning("Change queued while offline", { description: label })
     },
     [mutation, queryClient]
   )
@@ -163,6 +197,10 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
 
   const triggerRemote = useCallback((source: "manual" | "auto" | "conflict" = "manual", forcedTaskId?: string) => {
     const store = useBoardStore.getState()
+    if (!store.networkOnline || store.forcedOffline) {
+      toast.warning("Remote activity is unavailable while offline")
+      return
+    }
     const confirmed = loadConfirmedTasks()
     if (!confirmed.length) return
     const configuredId = forcedTaskId ?? (source === "conflict" ? store.selectedTaskId : store.targetTaskId)
@@ -184,8 +222,15 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
     if (field === "tags") next.tags = [...new Set([...original.tags, "collaboration"])]
     saveConfirmedTasks(confirmed.map((task) => (task.id === next.id ? next : task)))
     queryClient.setQueryData(TASKS_KEY, reconcilePending(loadConfirmedTasks(), useBoardStore.getState().pending))
-    if (store.selectedTaskId === next.id && store.draftDirty && store.draftBaseVersion !== null) {
-      store.setConflict({ taskId: next.id, baseVersion: store.draftBaseVersion, incoming: next, changedFields: changedDraftFields(original, next) })
+    store.upsertPresence({ user: actor, taskId: next.id, mode: "viewing", remote: true, updatedAt: new Date().toISOString() })
+    if (store.selectedTaskId === next.id && store.draftDirty && store.draftBaseTask) {
+      const changedFields = [...new Set([
+        ...(store.conflict?.taskId === next.id ? store.conflict.changedFields : []),
+        ...changedDraftFields(original, next),
+      ])]
+      store.setConflict({ taskId: next.id, base: store.conflict?.base ?? store.draftBaseTask, incoming: next, changedFields })
+    } else if (store.selectedTaskId === next.id && !store.draftDirty) {
+      store.setDraft(toDraft(next), next, false)
     }
     store.addEvent({
       id: crypto.randomUUID(), actor, taskId: next.id, taskTitle: next.title,
@@ -207,10 +252,14 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   useEffect(() => {
-    if (!hydrated || query.isLoading) return
+    if (!hydrated || query.isLoading || !connected) return
     const store = useBoardStore.getState()
     queryClient.setQueryData(TASKS_KEY, reconcilePending(loadConfirmedTasks(), store.pending))
-    store.pending.forEach((operation) => {
+    store.pending.forEach((storedOperation) => {
+      const operation = storedOperation.waitForConnection
+        ? { ...storedOperation, dueAt: Date.now() + 2_000, waitForConnection: false }
+        : storedOperation
+      if (operation !== storedOperation) store.updatePending(operation.id, operation)
       if (!runtimeActive.has(operation.id)) {
         store.addEvent({
           id: crypto.randomUUID(), actor: operation.actor, taskId: operation.taskId,
@@ -220,10 +269,10 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
         execute(operation.before, operation.after, operation.label, { existing: operation })
       }
     })
-  }, [execute, hydrated, query.isLoading, queryClient])
+  }, [connected, execute, hydrated, query.isLoading, queryClient])
 
   useEffect(() => {
-    if (!hydrated || !autoSimulation) return
+    if (!hydrated || !autoSimulation || !connected) return
     const store = useBoardStore.getState()
     const scheduled = nextSimulationAt && nextSimulationAt > Date.now()
       ? nextSimulationAt
@@ -234,7 +283,7 @@ export function TaskOperationsProvider({ children }: { children: ReactNode }) {
       store.setDevOption("nextSimulationAt", Date.now() + 10_000 + Math.floor(Math.random() * 5_001))
     }, Math.max(0, scheduled - Date.now()))
     return () => window.clearTimeout(timer)
-  }, [autoSimulation, hydrated, nextSimulationAt, triggerRemote])
+  }, [autoSimulation, connected, hydrated, nextSimulationAt, triggerRemote])
 
   const value = useMemo(() => ({ tasks, isLoading: query.isLoading, execute, undo, redo, triggerRemote, resetDataset }),
     [tasks, query.isLoading, execute, undo, redo, triggerRemote, resetDataset])

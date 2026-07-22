@@ -18,12 +18,14 @@ export function TaskForm({
   onSubmit,
   submitLabel = "Save task",
   showStatus = true,
+  disabled = false,
 }: {
   value: TaskDraft
   onChange: (patch: Partial<TaskDraft>) => void
   onSubmit: () => void
   submitLabel?: string
   showStatus?: boolean
+  disabled?: boolean
 }) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const prefix = useId()
@@ -37,7 +39,8 @@ export function TaskForm({
     if (!Object.keys(next).length) onSubmit()
   }
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit}>
+      <fieldset disabled={disabled} className="space-y-4 disabled:opacity-70">
       <Field label="Title" htmlFor={`${prefix}-title`} error={errors.title}>
         <Input id={`${prefix}-title`} value={value.title} onChange={(event) => onChange({ title: event.target.value })} aria-invalid={!!errors.title} />
       </Field>
@@ -59,7 +62,7 @@ export function TaskForm({
         </Field>
       </div>
       {showStatus && <Field label="Status" htmlFor={`${prefix}-status`}>
-        <Select value={value.status} onValueChange={(status) => status && onChange({ status })}>
+        <Select items={STATUS_LABELS} value={value.status} onValueChange={(status) => status && onChange({ status })}>
           <SelectTrigger id={`${prefix}-status`} className="w-full"><SelectValue /></SelectTrigger>
           <SelectContent>{STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent>
         </Select>
@@ -68,6 +71,7 @@ export function TaskForm({
         <Input id={`${prefix}-tags`} value={value.tags.join(", ")} onChange={(event) => onChange({ tags: event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} />
       </Field>
       <Button type="submit" className="w-full">{submitLabel}</Button>
+      </fieldset>
     </form>
   )
 }

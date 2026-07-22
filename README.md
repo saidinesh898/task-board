@@ -73,6 +73,14 @@ Developer Tools is the only source of simulated activity. It starts paused and p
 
 External updates are written to confirmed state and then reconciled with local optimistic patches. Viewing an updated task refreshes it and shows a toast. Editing preserves the draft and offers Keep mine, Take theirs, or per-field review.
 
+## Presence, locking, and reconnects
+
+Opening a task publishes viewing presence; changing its draft promotes that presence to editing. Presence avatars appear directly on cards, and a remote editing presence locks drag, status, and form controls until that user releases the task. Developer Tools can place or release deterministic viewing/editing presence for the configured remote user and target task.
+
+Conflicts preserve the original local base, the local draft, and the newest remote task. The merge dialog exposes the required **Keep mine**, **Take theirs**, and **Merge manually** paths. Manual description reconciliation starts from a deterministic sentence-block CRDT-like merge: base blocks use observed-remove semantics, while concurrent additions converge by actor identity and source order. The result remains editable before it is saved as one undoable optimistic operation.
+
+Developer Tools can force the simulated connection offline. Local changes remain visible and persist in the pending queue without being treated as failures. Reconnecting rebuilds the view from confirmed data plus queued patches, waits the normal two-second latency, and commits each inactive operation once. Browser `online` and `offline` events drive the same status banner and replay behavior. This remains a browser-side collaboration simulation rather than a WebSocket-backed multi-device system.
+
 ## Undo and redo
 
 Local history records task creation and every editable field, status, and position change. History is capped at 50 actions and persists across reloads. Undo applies a forced inverse operation over the newest confirmed task; fields in the inverse patch intentionally win over simulated remote edits. Remote activity itself is never added to local history.
@@ -119,4 +127,4 @@ TanStack Virtual currently emits an informational React Compiler lint warning be
 
 ## Scope decisions
 
-Expert Options A and B are implemented. Required Part 2 conflict reconciliation is included, but full Option C presence, locking, CRDT/operational transformation, and reconnect simulation are intentionally excluded. Deletion, service workers, and the optional blog post are also outside this submission.
+Expert Options A, B, and C are implemented. Option C is intentionally a deterministic browser-side simulation: it demonstrates presence, edit locks, three-way resolution, convergent description merging, offline queueing, and reconnect replay without claiming a production multi-device transport. Deletion, service workers, and the optional blog post remain outside this submission.
