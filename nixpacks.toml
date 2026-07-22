@@ -1,0 +1,13 @@
+# Dokploy defaults to Nixpacks unless Dockerfile is selected explicitly.
+# Keep this fallback on the same supported runtime as the production Dockerfile.
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"

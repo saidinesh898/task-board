@@ -28,6 +28,8 @@ For Dokploy, create an application from the Git repository and use:
 - Container port: `3000`
 - Health-check path: `/`
 
+Confirm the deployment log says **Dockerfile build**. Dokploy defaults to Nixpacks; if it still reports `Nixpacks build`, change the application's build type to Dockerfile and redeploy without cache. The repository also declares Node `22.x` and includes `nixpacks.toml` as a safe fallback, because Next.js 16 cannot build on Nixpacks' default Node 18 runtime.
+
 No persistent server volume is required. Task data, query favorites, settings, and history are intentionally stored in each browser's versioned `localStorage`. Dokploy can terminate TLS and proxy the public domain to container port 3000.
 
 Verification commands:
