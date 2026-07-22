@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Thomson Reuters Board
 
-## Getting Started
+A real-time collaboration simulation built for the optional React assignment. It combines a polished shadcn/ui board with optimistic mutations, persistent undo/redo, virtualized columns, accessible drag-and-drop, and deterministic developer controls.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Verification commands:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test
+npm run lint
+npm run build
+```
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+- **TanStack Query** owns task server-state, optimistic cache updates, mutation status, and rollback reconciliation.
+- **Zustand** owns global client state: filters, selected task, drafts, Developer Tools, pending-operation metadata, and the 50-entry undo/redo history.
+- **The mock database** is the confirmed source of truth in `task-board:db:v1`. Query cache and client state use their own versioned local-storage keys.
+- **TanStack Virtual** gives each status column an independent virtual viewport. Stable task IDs, measured rows, and overscan keep the mounted DOM bounded in the 1,000-task mode.
+- **dnd-kit** handles pointer, touch, and keyboard movement. A DragOverlay avoids clipping inside the virtual scroll containers.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The page remains a Next.js Server Component. Interactive providers and browser-only persistence begin at a focused client boundary.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Optimistic lifecycle
 
-## Deploy on Vercel
+Every create, edit, move, reorder, undo, redo, and conflict resolution updates the Query cache immediately. An operation records its before/after values, actor, deterministic outcome, and completion deadline. The affected card alone shows a saving indicator while the simulated request waits two seconds.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Confirmed tasks and remaining pending patches are replayed after every success or failure. This prevents an older rollback from erasing newer changes. Pending operations are persisted with their outcome and deadline, so a reload resumes them once rather than silently losing them.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Use Developer Tools → **Force next failure** to inspect rollback behavior without waiting for the random 10% failure path.
+
+## Developer Tools
+
+Developer Tools is the only source of simulated activity. It starts paused and provides:
+
+- Acting-user and remote-user emulation.
+- Random or targeted remote updates.
+- A guaranteed conflict trigger for the task currently being edited.
+- Optional recurring updates every 10–15 seconds.
+- Random, forced-success, and forced-failure network outcomes.
+- A compact event log and pending-operation counter.
+- Deterministic 30-task and 1,000-task datasets.
+
+External updates are written to confirmed state and then reconciled with local optimistic patches. Viewing an updated task refreshes it and shows a toast. Editing preserves the draft and offers Keep mine, Take theirs, or per-field review.
+
+## Undo and redo
+
+Local history records task creation and every editable field, status, and position change. History is capped at 50 actions and persists across reloads. Undo applies a forced inverse operation over the newest confirmed task; fields in the inverse patch intentionally win over simulated remote edits. Remote activity itself is never added to local history.
+
+The header and shortcut reference show the exact next undo and redo action.
+
+## Keyboard and accessibility
+
+Press `?` or select **Shortcuts** to see the complete reference. Key actions are ignored while typing in an input, textarea, select, combobox, or content-editable control.
+
+- `?` — shortcut reference
+- `/` — focus search
+- `N` — create task
+- `D` — toggle Developer Tools
+- `Ctrl/Cmd+Z` — undo
+- `Ctrl/Cmd+Shift+Z` — redo
+- `Tab`, `Space/Enter`, arrow keys, `Esc` — keyboard drag-and-drop
+
+Cards expose saving state through `aria-busy`; drag actions have screen-reader announcements; dialogs restore focus; motion respects the system reduced-motion preference; and status changes are also available without dragging.
+
+## Performance notes
+
+The 1,000-task control exists specifically for profiling. Filtering, grouping, sorting, pending-ID lookup, and derived counts are memoized. Cards use `React.memo` and Zustand consumers select only the state they need.
+
+In React DevTools Profiler, validate that:
+
+1. Typing in search re-renders the board projection but not unrelated Developer Tools controls.
+2. A single optimistic mutation updates only its affected virtual column/card plus header counters.
+3. Scrolling mounts only the visible range plus eight overscan rows per column rather than all 1,000 cards.
+
+TanStack Virtual currently emits an informational React Compiler lint warning because its returned functions cannot safely be compiler-memoized; React intentionally skips compiler memoization for that component while the virtualizer continues managing its own updates.
+
+## Scope decisions
+
+Expert Option A is implemented. Required Part 2 conflict reconciliation is included, but full Option C presence, locking, CRDT/operational transformation, and reconnect simulation are intentionally excluded. The Option B query builder, deletion, service workers, and optional blog post are also outside this submission.
