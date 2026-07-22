@@ -6,12 +6,12 @@ export interface TaskFilters {
   priority: Priority | "all"
 }
 
-export function filterTasks(tasks: Task[], filters: TaskFilters) {
+export function filterTasks(tasks: Task[], filters: TaskFilters, advancedPredicate: (task: Task) => boolean = () => true) {
   const term = filters.search.trim().toLowerCase()
   return tasks.filter((task) =>
     (!term || task.title.toLowerCase().includes(term) || task.description.toLowerCase().includes(term)) &&
     (filters.assignee === "all" || task.assignee === filters.assignee) &&
-    (filters.priority === "all" || task.priority === filters.priority)
+    (filters.priority === "all" || task.priority === filters.priority) &&
+    advancedPredicate(task)
   )
 }
-

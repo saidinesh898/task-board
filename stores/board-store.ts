@@ -12,12 +12,16 @@ import type {
   SimulationField,
   TaskDraft,
 } from "@/features/tasks/types"
+import { createEmptyQuery, type FavoriteQuery, type QueryGroup } from "@/features/query-builder/types"
 
 interface BoardState {
   hydrated: boolean
   search: string
   assignee: string
   priority: Priority | "all"
+  advancedQuery: QueryGroup
+  queryBuilderOpen: boolean
+  favoriteQueries: FavoriteQuery[]
   selectedTaskId: string | null
   createOpen: boolean
   shortcutsOpen: boolean
@@ -41,6 +45,11 @@ interface BoardState {
   setHydrated: (value: boolean) => void
   setFilter: (key: "search" | "assignee" | "priority", value: string) => void
   clearFilters: () => void
+  setAdvancedQuery: (query: QueryGroup) => void
+  setQueryBuilderOpen: (open: boolean) => void
+  saveFavoriteQuery: (name: string) => void
+  applyFavoriteQuery: (id: string) => void
+  deleteFavoriteQuery: (id: string) => void
   setSelectedTaskId: (id: string | null) => void
   setCreateOpen: (open: boolean) => void
   setShortcutsOpen: (open: boolean) => void
@@ -66,6 +75,9 @@ const initial = {
   search: "",
   assignee: "all",
   priority: "all" as const,
+  advancedQuery: createEmptyQuery(),
+  queryBuilderOpen: false,
+  favoriteQueries: [] as FavoriteQuery[],
   selectedTaskId: null,
   createOpen: false,
   shortcutsOpen: false,
@@ -94,7 +106,22 @@ export const useBoardStore = create<BoardState>()(
       ...initial,
       setHydrated: (hydrated) => set({ hydrated }),
       setFilter: (key, value) => set({ [key]: value }),
-      clearFilters: () => set({ search: "", assignee: "all", priority: "all" }),
+      clearFilters: () => set({ search: "", assignee: "all", priority: "all", advancedQuery: createEmptyQuery() }),
+      setAdvancedQuery: (advancedQuery) => set({ advancedQuery }),
+      setQueryBuilderOpen: (queryBuilderOpen) => set({ queryBuilderOpen }),
+      saveFavoriteQuery: (rawName) => {
+        const name = rawName.trim().slice(0, 60)
+        if (!name) return
+        const favorite: FavoriteQuery = {
+          id: crypto.randomUUID(), name, query: get().advancedQuery, createdAt: new Date().toISOString(),
+        }
+        set((state) => ({ favoriteQueries: [...state.favoriteQueries, favorite].slice(-20) }))
+      },
+      applyFavoriteQuery: (id) => {
+        const favorite = get().favoriteQueries.find((item) => item.id === id)
+        if (favorite) set({ advancedQuery: favorite.query, queryBuilderOpen: true })
+      },
+      deleteFavoriteQuery: (id) => set((state) => ({ favoriteQueries: state.favoriteQueries.filter((item) => item.id !== id) })),
       setSelectedTaskId: (selectedTaskId) => set({ selectedTaskId }),
       setCreateOpen: (createOpen) => set({ createOpen }),
       setShortcutsOpen: (shortcutsOpen) => set({ shortcutsOpen }),
@@ -143,6 +170,9 @@ export const useBoardStore = create<BoardState>()(
         search: state.search,
         assignee: state.assignee,
         priority: state.priority,
+        advancedQuery: state.advancedQuery,
+        queryBuilderOpen: state.queryBuilderOpen,
+        favoriteQueries: state.favoriteQueries,
         selectedTaskId: state.selectedTaskId,
         devOpen: state.devOpen,
         activeUser: state.activeUser,

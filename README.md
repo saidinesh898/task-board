@@ -26,6 +26,7 @@ npm run build
 - **The mock database** is the confirmed source of truth in `task-board:db:v1`. Query cache and client state use their own versioned local-storage keys.
 - **TanStack Virtual** gives each status column an independent virtual viewport. Stable task IDs, measured rows, and overscan keep the mounted DOM bounded in the 1,000-task mode.
 - **dnd-kit** handles pointer, touch, and keyboard movement. A DragOverlay avoids clipping inside the virtual scroll containers.
+- **The advanced query engine** compiles a validated nested AND/OR tree into one predicate. The board applies it in the same memoized pass as quick filters, keeping query changes responsive with 1,000 tasks.
 
 The page remains a Next.js Server Component. Interactive providers and browser-only persistence begin at a focused client boundary.
 
@@ -57,6 +58,18 @@ Local history records task creation and every editable field, status, and positi
 
 The header and shortcut reference show the exact next undo and redo action.
 
+## Advanced query builder
+
+Select **Advanced** beside the quick filters to build compound conditions. Every connector between rules can independently be AND or OR, so a flat sequence can express `Rule 1 OR Rule 2 AND Rule 3`; AND has standard precedence over OR. Nested groups remain available for explicit grouping. Fields include title, description, status, priority, assignee, and tags, with equals, not-equals, contains, and not-contains operators.
+
+The active query is stored as readable URL rules, such as `rule1=priority.equals.high`, with a `logic` expression such as `1-or-(2-and-3)`. Search, assignee, and priority are synchronized as readable `search`, `assignee`, and `priority` parameters. Copying the address recreates the complete result set; older base64url and JSON query links remain compatible and are upgraded automatically. Invalid or incompatible URL rules are ignored safely. Named favorites are persisted with the rest of the client state in `task-board:client:v1` and can be applied or removed from the builder.
+
+For example, the UI can represent:
+
+```text
+(priority = high AND assignee = You) OR (status = done AND tags contains "urgent")
+```
+
 ## Keyboard and accessibility
 
 Press `?` or select **Shortcuts** to see the complete reference. Key actions are ignored while typing in an input, textarea, select, combobox, or content-editable control.
@@ -85,4 +98,4 @@ TanStack Virtual currently emits an informational React Compiler lint warning be
 
 ## Scope decisions
 
-Expert Option A is implemented. Required Part 2 conflict reconciliation is included, but full Option C presence, locking, CRDT/operational transformation, and reconnect simulation are intentionally excluded. The Option B query builder, deletion, service workers, and optional blog post are also outside this submission.
+Expert Options A and B are implemented. Required Part 2 conflict reconciliation is included, but full Option C presence, locking, CRDT/operational transformation, and reconnect simulation are intentionally excluded. Deletion, service workers, and the optional blog post are also outside this submission.
