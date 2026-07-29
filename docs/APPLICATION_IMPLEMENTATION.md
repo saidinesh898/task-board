@@ -29,8 +29,8 @@ The application divides responsibility among four main layers:
 | --- | --- | --- |
 | Next.js shell | `app/layout.tsx`, `app/page.tsx`, `app/error.tsx` | Route, document shell, metadata, fonts, provider boundary, route error fallback |
 | Feature UI | `features/board/**`, `features/query-builder/**`, `features/developer-tools/**`, `features/keyboard-shortcuts/**` | Visible board, dialogs, filtering UI, DnD, virtual columns, developer controls, shortcuts |
-| Client orchestration | `features/tasks/task-operations.tsx`, `stores/board-store.ts` | Query cache, mutations, optimistic projection, remote events, scheduling, global client state, persistence |
-| Domain and persistence | `features/tasks/types.ts`, `repository.ts`, `seed.ts`, `selectors.ts`, `format.ts` | Runtime validation, domain types, mock database, deterministic data, pure filtering and formatting |
+| Client orchestration | `features/tasks/task-operations.tsx`, `features/tasks/operations/**`, `stores/board-store.ts` | Query cache, mutation queue, reconnect replay, remote events, scheduling, global client state, persistence |
+| Domain and persistence | `features/tasks/types.ts`, `optimistic.ts`, `repository.ts`, `seed.ts`, `selectors.ts`, `format.ts` | Runtime validation, domain types, pure optimistic projection, mock database, deterministic data, filtering and formatting |
 
 ```mermaid
 flowchart TD
@@ -282,11 +282,11 @@ sequenceDiagram
 
 The deterministic initial data lets server and first client render agree, which avoids hydration mismatches. The stored database is applied after mount. `hydrated` prevents pending-operation recovery and automatic simulation scheduling before Zustand has restored the durable client state.
 
-`runtimeActive` is a module-level `Set` of operation IDs. It prevents a single JavaScript runtime from starting the same restored operation more than once when effects re-run. It is intentionally not persisted; persisted operation IDs are the recovery source after a full reload.
+`activeOperationIds` is a module-level `Set` of operation IDs in `operations/offline-queue.ts`. It prevents a single JavaScript runtime from starting the same restored operation more than once when effects re-run. It is intentionally not persisted; persisted operation IDs are the recovery source after a full reload.
 
 ## 9. Optimistic mutation engine
 
-All local creates, edits, moves, reorders, conflict resolutions, undo actions, and redo actions pass through `execute()` in `TaskOperationsProvider`.
+All local creates, edits, moves, reorders, conflict resolutions, undo actions, and redo actions pass through `execute()` in `useTaskOperationEngine()`. `TaskOperationsProvider` remains the small public façade consumed by UI components.
 
 ### Queueing a new operation
 
@@ -303,7 +303,7 @@ For a new operation, `execute()`:
 9. records a history entry unless disabled;
 10. records a `queued` event;
 11. reloads confirmed tasks and replays every pending operation into the query cache;
-12. starts the mutation.
+12. starts the mutation when connected, or leaves it in the durable queue while offline.
 
 Failure modes behave as follows:
 
@@ -323,7 +323,7 @@ Because complete snapshots are replayed, a later pending operation for the same 
 
 ### Simulated request and success
 
-The mutation adds the operation ID to `runtimeActive`, waits until its stored deadline, and throws if the predetermined outcome is failure.
+The mutation adds the operation ID to `activeOperationIds`, waits until its stored deadline, pauses if connectivity was lost, and throws if the predetermined outcome is failure.
 
 On success, `commitOperation()`:
 
@@ -335,7 +335,7 @@ On success, `commitOperation()`:
 6. inserts, replaces, or removes the task;
 7. saves the confirmed database.
 
-The success callback then removes the operation from `runtimeActive` and persisted pending state, replays any remaining pending operations over the returned confirmed tasks, updates the query cache, and logs a `success` event.
+The success callback then removes the operation from `activeOperationIds` and persisted pending state, replays any remaining pending operations over the returned confirmed tasks, updates the query cache, and logs a `success` event.
 
 ### Failure and rollback
 
@@ -367,7 +367,9 @@ flowchart LR
 
 ### Reload recovery
 
-After Zustand hydration, every persisted pending operation absent from `runtimeActive` gets a `resumed` event and is passed back to `execute()` as `existing`. Existing operations are not added to history or pending state a second time. `sleepUntil` waits only for the remaining duration; if the deadline passed during reload, it resolves immediately.
+After Zustand hydration, every persisted pending operation absent from `activeOperationIds` gets a `resumed` event and is passed back to `execute()` as `existing`. Existing operations are not added to history or pending state a second time. Work created offline receives a fresh two-second deadline on reconnect; other resumed work waits only for any remaining duration.
+
+For sequence diagrams, rollback reasoning, and production boundaries, see `docs/OFFLINE_AND_OPTIMISTIC_OPERATIONS.md`.
 
 ## 10. Task creation and editing
 
@@ -895,16 +897,7 @@ Playwright runs Chromium against a reused or automatically started `npm run dev`
 9. an advanced mixed-connector query updates readable URL parameters, filters results, saves a favorite, and survives reload;
 10. normal search synchronizes to the URL and survives reload.
 
-`tests/e2e/interview-guide.spec.ts` verifies:
-
-1. the study route reloads without browser runtime errors;
-2. lesson completion persists across reload;
-3. the virtualization lab updates mounted geometry when overscan changes;
-4. the system-flow lab advances and switches scenarios;
-5. interview answers can be revealed and confidence-rated;
-6. mobile study navigation opens and selects a lesson.
-
-Current browser result: 16 tests, all passing when the two suites are run serially. The full eight-worker run can exceed the development server's 30-second test timeout on this machine; the same original and new journeys pass with `--workers=1`.
+The 12-test board suite passes serially on this machine.
 
 ### Gaps in automated coverage
 
@@ -944,8 +937,8 @@ ESLint composes Next.js core-web-vitals and TypeScript rules. Generated Next/bui
 
 Verified current results:
 
-- unit tests: pass, 13/13;
-- end-to-end tests: pass, 16/16 across the board and interview-guide suites when run serially;
+- unit tests: pass, 15/15;
+- end-to-end board tests: pass, 12/12 when run serially;
 - lint: exits successfully with one known TanStack Virtual/React Compiler warning;
 - production build: pass;
 - route `/`: statically prerendered.
@@ -1025,7 +1018,8 @@ No persistent server volume is required or useful: all application state is per-
 
 | File | Responsibility |
 | --- | --- |
-| `features/board/board-app.tsx` | Feature composition, memoized projection, DnD context, move ordering, header/footer/loading UI |
+| `features/board/board-app.tsx` | Feature composition, memoized projection, DnD context, and fractional move ordering |
+| `features/board/board-chrome.tsx` | Header actions, theme menu, footer links, and board loading skeleton |
 | `features/board/board-filters.tsx` | Quick filters, advanced-mode toggle, counts, clear action |
 | `features/board/create-task-dialog.tsx` | New-task local draft, metadata/position creation, optimistic create |
 | `features/board/task-card.tsx` | Memoized sortable card, task summary, pending state, status fallback |
@@ -1039,10 +1033,15 @@ No persistent server volume is required or useful: all application state is per-
 | --- | --- |
 | `features/tasks/types.ts` | Zod schemas, derived domain types, operation/history/conflict/event types, constants |
 | `features/tasks/seed.ts` | Deterministic 30/1,000-task data generator |
-| `features/tasks/repository.ts` | Confirmed browser database, validation/recovery, operation commit/replay, deadline wait |
+| `features/tasks/repository.ts` | Confirmed browser database, validation/recovery, operation commit, and deadline wait |
+| `features/tasks/optimistic.ts` | Pure operation application and confirmed-plus-pending projection |
 | `features/tasks/selectors.ts` | Pure quick/advanced task filtering |
 | `features/tasks/format.ts` | UTC date formatting through `Intl.DateTimeFormat` |
-| `features/tasks/task-operations.tsx` | Query/provider API, optimistic lifecycle, rollback, resume, history commands, remote simulation, reset |
+| `features/tasks/task-operations.tsx` | Stable query/provider API consumed by board components |
+| `features/tasks/operations/offline-queue.ts` | Pending operation construction, deadlines, connection waiting, and duplicate-run guard |
+| `features/tasks/operations/operation-events.ts` | Queue lifecycle event construction |
+| `features/tasks/operations/use-task-operation-engine.ts` | Optimistic enqueue, mutation, rollback, reconnect replay, undo, and redo |
+| `features/tasks/operations/use-remote-simulation.ts` | Remote task updates, conflict input, automatic scheduling, and dataset reset |
 
 ### Query feature
 
@@ -1052,14 +1051,6 @@ No persistent server volume is required or useful: all application state is per-
 | `features/query-builder/query-engine.ts` | Immutable editing, compilation, precedence, descriptions, legacy/readable URL codecs |
 | `features/query-builder/query-builder.tsx` | Recursive query editor and favorites UI |
 | `features/query-builder/use-query-url-sync.ts` | Hydration-ordered inbound/outbound URL synchronization and popstate handling |
-
-### Interview guide feature
-
-| File | Responsibility |
-| --- | --- |
-| `app/interview-guide/page.tsx` | Static route metadata and Server Component entry for the study experience |
-| `features/interview-guide/content.ts` | Ten lesson modules, 35 interview questions, five system flows, code samples, and accent metadata |
-| `features/interview-guide/interview-guide.tsx` | Responsive learning UI, persistent progress, code explorer, interactive labs, flow stepper, and confidence drill |
 
 ### Supporting features and state
 
@@ -1079,10 +1070,10 @@ No persistent server volume is required or useful: all application state is per-
 | File | Responsibility |
 | --- | --- |
 | `features/tasks/task-logic.test.ts` | Domain, seed, filter, and reconciliation unit tests |
+| `features/tasks/operations/offline-queue.test.ts` | Offline queue snapshots and reconnect-deadline tests |
 | `features/query-builder/query-engine.test.ts` | Query evaluation, editing, precedence, and URL unit tests |
 | `features/collaboration/description-crdt.test.ts` | Convergence, deletion, unchanged-branch, and deduplication tests |
 | `tests/e2e/board.spec.ts` | Core user-flow browser tests |
-| `tests/e2e/interview-guide.spec.ts` | Study route runtime, progress, labs, drill, and mobile navigation tests |
 | `vitest.config.mts` | jsdom unit runner, React/alias plugins, coverage reporters |
 | `vitest.setup.ts` | jest-dom matcher registration |
 | `playwright.config.ts` | Chromium project, local dev server, base URL, failure traces |
@@ -1139,12 +1130,12 @@ These are not hidden failures; they define the line between the current simulati
 To follow a task creation in code:
 
 ```text
-AppHeader or N shortcut
+BoardHeader or N shortcut
 → board-store.setCreateOpen(true)
 → CreateTaskDialog
 → TaskForm validation
 → CreateTaskDialog.create()
-→ TaskOperationsProvider.execute()
+→ useTaskOperationEngine().execute()
 → pending/history/event in Zustand
 → reconcilePending() into TanStack Query
 → immediate TaskCard with aria-busy
@@ -1190,11 +1181,10 @@ The implementation described here was checked against:
 - the live local page and its accessibility tree;
 - `npm test`;
 - `npx playwright test board.spec.ts --workers=1`;
-- `npx playwright test interview-guide.spec.ts --workers=1`;
 - `npm run lint`;
 - `npm run build`.
 
-At the time of verification, all 13 unit tests, all 16 serial browser tests, and the production build passed. Lint completed with the single documented `useVirtualizer()` React Compiler compatibility warning and no errors.
+At the time of verification, all 15 unit tests, all 12 serial board browser tests, and the production build passed. Lint completed with the single documented `useVirtualizer()` React Compiler compatibility warning and no errors.
 
 ---
 

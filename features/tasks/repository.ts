@@ -1,10 +1,13 @@
 import { z } from "zod"
 import { makeSeedTasks } from "./seed"
+import { applyOperationToTasks } from "./optimistic"
 import { taskSchema, type PendingOperation, type Task } from "./types"
 
 const DB_KEY = "task-board:db:v1"
 const dbSchema = z.object({ version: z.literal(1), tasks: z.array(taskSchema) })
 
+// Repository functions are safe during Server Component rendering: they fall
+// back to deterministic seeds until a browser localStorage instance exists.
 function browserStorage() {
   return typeof window === "undefined" ? null : window.localStorage
 }
@@ -21,6 +24,8 @@ export function loadConfirmedTasks(): Task[] {
   try {
     return dbSchema.parse(JSON.parse(raw)).tasks
   } catch {
+    // Invalid or stale mock data is reset as one unit. There is no partial
+    // migration path for this versioned demo repository.
     const tasks = makeSeedTasks()
     saveConfirmedTasks(tasks)
     return tasks
@@ -37,13 +42,6 @@ export function resetConfirmedTasks(count: 30 | 1000) {
   return tasks
 }
 
-export function applyOperationToTasks(tasks: Task[], operation: Pick<PendingOperation, "taskId" | "after">) {
-  if (!operation.after) return tasks.filter((task) => task.id !== operation.taskId)
-  const index = tasks.findIndex((task) => task.id === operation.taskId)
-  if (index === -1) return [...tasks, operation.after]
-  return tasks.map((task) => (task.id === operation.taskId ? operation.after! : task))
-}
-
 export function commitOperation(operation: PendingOperation): Task[] {
   const current = loadConfirmedTasks()
   const previous = current.find((task) => task.id === operation.taskId)
@@ -58,10 +56,6 @@ export function commitOperation(operation: PendingOperation): Task[] {
   const tasks = applyOperationToTasks(current, { ...operation, after })
   saveConfirmedTasks(tasks)
   return tasks
-}
-
-export function reconcilePending(confirmed: Task[], operations: PendingOperation[]) {
-  return operations.reduce((tasks, operation) => applyOperationToTasks(tasks, operation), confirmed)
 }
 
 export function sleepUntil(dueAt: number) {

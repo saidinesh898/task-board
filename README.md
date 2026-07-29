@@ -1,6 +1,6 @@
 # Thomson Reuters Board
 
-A real-time collaboration simulation built for the optional React assignment. It combines a polished Base UI/CSS Modules board with optimistic mutations, persistent undo/redo, virtualized columns, accessible drag-and-drop, and deterministic developer controls.
+A real-time collaboration simulation built for the React assignment. It combines a polished Base UI/CSS Modules board with optimistic mutations, persistent undo/redo, virtualized columns, accessible drag-and-drop, and deterministic developer controls.
 
 ## Run locally
 
@@ -13,9 +13,8 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Documentation
 
-- Open the interactive [Board Systems Lab](http://localhost:3000/interview-guide) inside the running application for guided lessons, code examples, system-flow labs, and interview drills.
 - [`docs/APPLICATION_IMPLEMENTATION.md`](docs/APPLICATION_IMPLEMENTATION.md) is the comprehensive feature, architecture, syntax, patterns, tradeoffs, and interview-drill guide.
-- [`docs/INTERVIEW_CHEAT_SHEET.md`](docs/INTERVIEW_CHEAT_SHEET.md) is the condensed last-minute revision sheet.
+- [`docs/OFFLINE_AND_OPTIMISTIC_OPERATIONS.md`](docs/OFFLINE_AND_OPTIMISTIC_OPERATIONS.md) traces optimistic projection, offline queueing, reconnect replay, confirmation, and rollback.
 
 ## Docker and Dokploy
 
@@ -56,6 +55,7 @@ standalone target, so the existing traced Next.js container remains available.
 - **TanStack Query** owns task server-state, optimistic cache updates, mutation status, and rollback reconciliation.
 - **Zustand** owns global client state: filters, selected task, drafts, Developer Tools, pending-operation metadata, and the 50-entry undo/redo history.
 - **The mock database** is the confirmed source of truth in `task-board:db:v1`. Query cache and client state use their own versioned local-storage keys.
+- **The task operation layer** separates confirmed persistence (`repository.ts`), pure visible-state projection (`optimistic.ts`), queue/reconnect orchestration (`operations/use-task-operation-engine.ts`), and remote simulation (`operations/use-remote-simulation.ts`).
 - **TanStack Virtual** gives each status column an independent virtual viewport. Stable task IDs, measured rows, and overscan keep the mounted DOM bounded in the 1,000-task mode.
 - **dnd-kit's current React API** uses `DragDropProvider` for pointer and keyboard coordination, per-column sortable groups, typed drop acceptance, accessible announcements, and a `DragOverlay` that avoids clipping inside virtual scroll containers. Its DOM-reordering plugin is disabled so TanStack Virtual remains the only owner of virtual row placement; the card collision wrapper excludes the stationary source node.
 - **CSS Modules** own every component and route style. Tailwind utilities and its PostCSS/runtime dependencies were removed; the modules contain plain scoped CSS while `globals.css` owns reset rules and semantic theme variables.

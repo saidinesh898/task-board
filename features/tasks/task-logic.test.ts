@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { makeSeedTasks } from "./seed"
-import { applyOperationToTasks, reconcilePending } from "./repository"
+import { applyOperationToTasks, reconcilePending } from "./optimistic"
 import { filterTasks } from "./selectors"
 import { taskSchema, type PendingOperation } from "./types"
 

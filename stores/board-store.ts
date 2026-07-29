@@ -112,6 +112,11 @@ const initial = {
   events: [] as SimulationEvent[],
 }
 
+/**
+ * Global client state only. Confirmed tasks intentionally do not live here;
+ * TanStack Query owns their rendered projection and the repository owns the
+ * confirmed browser database.
+ */
 export const useBoardStore = create<BoardState>()(
   persist(
     (set, get) => ({
@@ -165,6 +170,8 @@ export const useBoardStore = create<BoardState>()(
         if (entry) set({ future: state.future.slice(0, -1), past: [...state.past, entry].slice(-50) })
         return entry
       },
+      // Pending operations are durable command snapshots. Persisting them is
+      // what lets optimistic work survive offline periods and full reloads.
       addPending: (operation) =>
         set((state) => ({ pending: [...state.pending.filter((item) => item.id !== operation.id), operation] })),
       updatePending: (id, patch) => set((state) => ({
@@ -186,6 +193,8 @@ export const useBoardStore = create<BoardState>()(
       name: "task-board:client:v1",
       version: 1,
       storage: createJSONStorage(() => localStorage),
+      // Persist only state that still has meaning after a reload. Dialog-open
+      // flags, browser connectivity, presence, and actions are runtime-only.
       partialize: (state) => ({
         search: state.search,
         assignee: state.assignee,

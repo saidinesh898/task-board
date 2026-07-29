@@ -8,6 +8,8 @@ import { ThemeProvider } from "next-themes"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
+// The root layout can render on the server, so the persister needs a Storage
+// object whose methods defer localStorage access until they run in a browser.
 const lazyBrowserStorage: Storage = {
   get length() { return typeof window === "undefined" ? 0 : window.localStorage.length },
   clear() { if (typeof window !== "undefined") window.localStorage.clear() },
@@ -18,6 +20,8 @@ const lazyBrowserStorage: Storage = {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  // One client and persister per mounted application. Recreating either during
+  // render would discard cache observers and restart persistence.
   const [queryClient] = useState(
     () =>
       new QueryClient({
