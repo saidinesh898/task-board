@@ -13,6 +13,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Documentation
 
+- [`docs/COMPONENT_TREE.md`](docs/COMPONENT_TREE.md) visualizes the React component tree and where Zustand, TanStack Query, dnd-kit, TanStack Virtual, and browser persistence connect.
 - [`docs/APPLICATION_IMPLEMENTATION.md`](docs/APPLICATION_IMPLEMENTATION.md) is the comprehensive feature, architecture, syntax, patterns, tradeoffs, and interview-drill guide.
 - [`docs/OFFLINE_AND_OPTIMISTIC_OPERATIONS.md`](docs/OFFLINE_AND_OPTIMISTIC_OPERATIONS.md) traces optimistic projection, offline queueing, reconnect replay, confirmation, and rollback.
 

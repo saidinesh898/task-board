@@ -1,0 +1,282 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1340" viewBox="0 0 1800 1340" role="img" aria-labelledby="title description">
+  <title id="title">Task Board component tree and library connections</title>
+  <desc id="description">Architecture diagram showing the Next.js component tree, TanStack Query and Zustand state paths, optimistic and offline operations, localStorage persistence, drag and drop, and virtualized task cards.</desc>
+
+  <defs>
+    <marker id="arrow-render" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155" />
+    </marker>
+    <marker id="arrow-state" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7c3aed" />
+    </marker>
+    <marker id="arrow-data" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#dc2626" />
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.10" />
+    </filter>
+    <style>
+      .canvas { fill: #f8fafc; }
+      .section { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 18; }
+      .section-title { fill: #0f172a; font: 600 20px Inter, "Segoe UI", sans-serif; }
+      .section-note { fill: #64748b; font: 400 13px Inter, "Segoe UI", sans-serif; }
+      .node { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; rx: 12; filter: url(#shadow); }
+      .node-next { fill: #eff6ff; stroke: #60a5fa; }
+      .node-react { fill: #ecfeff; stroke: #22d3ee; }
+      .node-zustand { fill: #f5f3ff; stroke: #8b5cf6; }
+      .node-query { fill: #fff1f2; stroke: #fb7185; }
+      .node-dnd { fill: #fff7ed; stroke: #fb923c; }
+      .node-virtual { fill: #f0fdfa; stroke: #2dd4bf; }
+      .node-storage { fill: #f1f5f9; stroke: #64748b; }
+      .node-domain { fill: #f8fafc; stroke: #94a3b8; }
+      .node-title { fill: #0f172a; font: 600 16px Inter, "Segoe UI", sans-serif; text-anchor: middle; }
+      .node-subtitle { fill: #475569; font: 400 12px Inter, "Segoe UI", sans-serif; text-anchor: middle; }
+      .node-code { fill: #334155; font: 400 11px "Cascadia Code", Consolas, monospace; text-anchor: middle; }
+      .pill { rx: 9; }
+      .pill-text { fill: #334155; font: 600 11px Inter, "Segoe UI", sans-serif; text-anchor: middle; }
+      .edge-render { fill: none; stroke: #334155; stroke-width: 2; marker-end: url(#arrow-render); }
+      .edge-state { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 7 5; marker-end: url(#arrow-state); }
+      .edge-data { fill: none; stroke: #dc2626; stroke-width: 2; stroke-dasharray: 2 5; marker-end: url(#arrow-data); }
+      .edge-label { fill: #475569; font: 500 11px Inter, "Segoe UI", sans-serif; text-anchor: middle; paint-order: stroke; stroke: #f8fafc; stroke-width: 4px; stroke-linejoin: round; }
+      .bus { fill: none; stroke: #94a3b8; stroke-width: 1.5; }
+      .legend-text { fill: #334155; font: 400 12px Inter, "Segoe UI", sans-serif; }
+    </style>
+  </defs>
+
+  <rect class="canvas" width="1800" height="1340" />
+
+  <text x="40" y="42" class="section-title">Task Board — component tree and library connections</text>
+  <text x="40" y="67" class="section-note">Solid = renders/contains · Purple dashed = reads/writes client state · Red dotted = confirmed/cache data flow</text>
+
+  <line x1="1075" y1="50" x2="1125" y2="50" class="edge-render" />
+  <text x="1135" y="54" class="legend-text">component tree</text>
+  <line x1="1275" y1="50" x2="1325" y2="50" class="edge-state" />
+  <text x="1335" y="54" class="legend-text">Zustand / queue state</text>
+  <line x1="1515" y1="50" x2="1565" y2="50" class="edge-data" />
+  <text x="1575" y="54" class="legend-text">query / persistence data</text>
+
+  <!-- Next.js and React component shell -->
+  <rect x="30" y="90" width="1740" height="205" class="section" />
+  <text x="55" y="122" class="section-title">1. Next.js and React component shell</text>
+  <text x="1745" y="121" class="section-note" text-anchor="end">app/layout.tsx → app/page.tsx → features/board</text>
+
+  <rect x="55" y="157" width="205" height="90" class="node node-next" />
+  <text x="157" y="189" class="node-title">RootLayout</text>
+  <text x="157" y="210" class="node-subtitle">Server Component</text>
+  <text x="157" y="229" class="node-code">app/layout.tsx</text>
+
+  <rect x="310" y="157" width="205" height="90" class="node node-react" />
+  <text x="412" y="189" class="node-title">Providers</text>
+  <text x="412" y="210" class="node-subtitle">client boundary</text>
+  <text x="412" y="229" class="node-code">app/providers.tsx</text>
+
+  <rect x="565" y="157" width="205" height="90" class="node node-next" />
+  <text x="667" y="189" class="node-title">HomePage</text>
+  <text x="667" y="210" class="node-subtitle">Server Component</text>
+  <text x="667" y="229" class="node-code">app/page.tsx</text>
+
+  <rect x="820" y="157" width="205" height="90" class="node node-react" />
+  <text x="922" y="189" class="node-title">BoardApp</text>
+  <text x="922" y="210" class="node-subtitle">client feature root</text>
+  <text x="922" y="229" class="node-code">board-app.tsx</text>
+
+  <rect x="1075" y="147" width="290" height="110" class="node node-query" />
+  <text x="1220" y="181" class="node-title">TaskOperationsProvider</text>
+  <text x="1220" y="204" class="node-subtitle">React Context façade</text>
+  <text x="1220" y="225" class="node-code">task-operations.tsx</text>
+  <rect x="1157" y="232" width="126" height="18" fill="#ffe4e6" class="pill" />
+  <text x="1220" y="245" class="pill-text">TanStack Query</text>
+
+  <rect x="1415" y="157" width="305" height="90" class="node node-react" />
+  <text x="1567" y="189" class="node-title">BoardExperience</text>
+  <text x="1567" y="210" class="node-subtitle">view state + interaction orchestration</text>
+  <text x="1567" y="229" class="node-code">board-app.tsx</text>
+
+  <path d="M260 202 H310" class="edge-render" />
+  <path d="M515 202 H565" class="edge-render" />
+  <path d="M770 202 H820" class="edge-render" />
+  <path d="M1025 202 H1075" class="edge-render" />
+  <path d="M1365 202 H1415" class="edge-render" />
+  <text x="285" y="190" class="edge-label">wraps</text>
+
+  <rect x="318" y="259" width="80" height="18" fill="#e0f2fe" class="pill" />
+  <text x="358" y="272" class="pill-text">next-themes</text>
+  <rect x="405" y="259" width="102" height="18" fill="#ffe4e6" class="pill" />
+  <text x="456" y="272" class="pill-text">Query persister</text>
+
+  <!-- State and data -->
+  <rect x="30" y="320" width="1740" height="420" class="section" />
+  <text x="55" y="352" class="section-title">2. State, optimistic updates, offline queue, and persistence</text>
+  <text x="1745" y="351" class="section-note" text-anchor="end">visible tasks = confirmed repository + pending operation snapshots</text>
+
+  <rect x="60" y="390" width="285" height="105" class="node node-query" />
+  <text x="202" y="423" class="node-title">TanStack Query cache</text>
+  <text x="202" y="446" class="node-subtitle">visible optimistic task list</text>
+  <text x="202" y="467" class="node-code">query key: ["tasks"]</text>
+  <rect x="139" y="471" width="126" height="18" fill="#ffe4e6" class="pill" />
+  <text x="202" y="484" class="pill-text">@tanstack/react-query</text>
+
+  <rect x="60" y="565" width="285" height="120" class="node node-zustand" />
+  <text x="202" y="598" class="node-title">useBoardStore</text>
+  <text x="202" y="621" class="node-subtitle">filters · drafts · history · presence</text>
+  <text x="202" y="642" class="node-subtitle">pending queue · connectivity · dev state</text>
+  <text x="202" y="665" class="node-code">stores/board-store.ts</text>
+
+  <rect x="420" y="382" width="310" height="120" class="node node-react" />
+  <text x="575" y="416" class="node-title">Task operation engine</text>
+  <text x="575" y="439" class="node-subtitle">execute · undo · redo · replay</text>
+  <text x="575" y="460" class="node-subtitle">success confirmation · failure rollback</text>
+  <text x="575" y="483" class="node-code">use-task-operation-engine.ts</text>
+
+  <rect x="420" y="565" width="310" height="120" class="node node-zustand" />
+  <text x="575" y="598" class="node-title">Offline queue helpers</text>
+  <text x="575" y="621" class="node-subtitle">operation snapshot · dueAt · reconnect</text>
+  <text x="575" y="642" class="node-subtitle">runtime duplicate-operation guard</text>
+  <text x="575" y="665" class="node-code">operations/offline-queue.ts</text>
+
+  <rect x="800" y="382" width="290" height="120" class="node node-domain" />
+  <text x="945" y="416" class="node-title">Optimistic projection</text>
+  <text x="945" y="439" class="node-subtitle">apply snapshots in queue order</text>
+  <text x="945" y="460" class="node-subtitle">rebuild after success or failure</text>
+  <text x="945" y="483" class="node-code">features/tasks/optimistic.ts</text>
+
+  <rect x="800" y="565" width="290" height="120" class="node node-query" />
+  <text x="945" y="598" class="node-title">useMutation</text>
+  <text x="945" y="621" class="node-subtitle">2-second simulated request</text>
+  <text x="945" y="642" class="node-subtitle">pause until connection returns</text>
+  <text x="945" y="665" class="node-code">@tanstack/react-query</text>
+
+  <rect x="1160" y="382" width="275" height="120" class="node node-domain" />
+  <text x="1297" y="416" class="node-title">Confirmed repository</text>
+  <text x="1297" y="439" class="node-subtitle">validate · load · save · commit</text>
+  <text x="1297" y="460" class="node-subtitle">increments confirmed version</text>
+  <text x="1297" y="483" class="node-code">features/tasks/repository.ts</text>
+
+  <rect x="1160" y="565" width="275" height="120" class="node node-react" />
+  <text x="1297" y="598" class="node-title">Remote simulation</text>
+  <text x="1297" y="621" class="node-subtitle">external edits · conflicts · timers</text>
+  <text x="1297" y="642" class="node-subtitle">writes confirmed state first</text>
+  <text x="1297" y="665" class="node-code">use-remote-simulation.ts</text>
+
+  <rect x="1500" y="382" width="225" height="303" class="node node-storage" />
+  <text x="1612" y="416" class="node-title">localStorage</text>
+  <text x="1612" y="438" class="node-subtitle">three versioned stores</text>
+  <rect x="1525" y="465" width="175" height="52" fill="#ffffff" stroke="#94a3b8" rx="8" />
+  <text x="1612" y="486" class="node-code">task-board:db:v1</text>
+  <text x="1612" y="504" class="node-subtitle">confirmed tasks</text>
+  <rect x="1525" y="533" width="175" height="52" fill="#f5f3ff" stroke="#8b5cf6" rx="8" />
+  <text x="1612" y="554" class="node-code">task-board:client:v1</text>
+  <text x="1612" y="572" class="node-subtitle">Zustand + pending queue</text>
+  <rect x="1525" y="601" width="175" height="58" fill="#fff1f2" stroke="#fb7185" rx="8" />
+  <text x="1612" y="622" class="node-code">query-cache:v1</text>
+  <text x="1612" y="640" class="node-subtitle">persisted Query cache</text>
+
+  <path d="M1220 257 V300 H575 V382" class="edge-render" />
+  <text x="805" y="314" class="edge-label">composes operation engine</text>
+  <path d="M1220 257 V310 H202 V390" class="edge-data" />
+  <text x="604" y="326" class="edge-label">useQuery</text>
+  <path d="M1567 247 V300 H202 V565" class="edge-state" />
+  <text x="1270" y="314" class="edge-label">selectors + actions</text>
+
+  <path d="M420 425 H345" class="edge-data" />
+  <text x="382" y="414" class="edge-label">setQueryData</text>
+  <path d="M575 502 V565" class="edge-render" />
+  <path d="M730 430 H800" class="edge-render" />
+  <text x="765" y="418" class="edge-label">reconcile</text>
+  <path d="M800 455 H345" class="edge-data" />
+  <path d="M730 625 H800" class="edge-render" />
+  <text x="765" y="614" class="edge-label">resume</text>
+  <path d="M420 625 H345" class="edge-state" />
+  <text x="382" y="614" class="edge-label">persist queue</text>
+  <path d="M945 565 V502" class="edge-render" />
+  <path d="M1090 625 H1120 V442 H1160" class="edge-data" />
+  <text x="1122" y="535" class="edge-label" transform="rotate(-90 1122 535)">success commit</text>
+  <path d="M1435 442 H1500" class="edge-data" />
+  <path d="M345 625 H375 V705 H1465 V559 H1500" class="edge-state" />
+  <path d="M202 495 V720 H1478 V630 H1500" class="edge-data" />
+  <path d="M1435 625 H1460 V485 H1500" class="edge-data" />
+  <path d="M1160 610 H1118 V470 H1090" class="edge-data" />
+  <text x="1128" y="535" class="edge-label" transform="rotate(-90 1128 535)">remote re-project</text>
+  <path d="M1160 650 H1098 V705 H202 V685" class="edge-state" />
+
+  <!-- UI component tree -->
+  <rect x="30" y="770" width="1740" height="530" class="section" />
+  <text x="55" y="802" class="section-title">3. Board UI tree and interaction libraries</text>
+  <text x="1745" y="801" class="section-note" text-anchor="end">BoardExperience renders the shell; DragDropProvider owns the interactive board subtree</text>
+
+  <path d="M900 825 V855" class="bus" />
+  <path d="M155 855 H1645" class="bus" />
+  <path d="M155 855 V880 M440 855 V880 M725 855 V880 M1010 855 V880 M1295 855 V880 M1645 855 V880" class="bus" />
+
+  <rect x="55" y="880" width="200" height="90" class="node node-react" />
+  <text x="155" y="913" class="node-title">BoardHeader</text>
+  <text x="155" y="936" class="node-subtitle">undo · redo · theme · create</text>
+  <text x="155" y="956" class="node-code">board-chrome.tsx</text>
+
+  <rect x="330" y="880" width="220" height="90" class="node node-zustand" />
+  <text x="440" y="913" class="node-title">NetworkStatus</text>
+  <text x="440" y="936" class="node-subtitle">online/offline events + queue count</text>
+  <text x="440" y="956" class="node-code">collaboration/</text>
+
+  <rect x="615" y="880" width="220" height="90" class="node node-zustand" />
+  <text x="725" y="913" class="node-title">DeveloperTools</text>
+  <text x="725" y="936" class="node-subtitle">failure · offline · remote controls</text>
+  <text x="725" y="956" class="node-code">developer-tools/</text>
+
+  <rect x="900" y="880" width="220" height="90" class="node node-react" />
+  <text x="1010" y="913" class="node-title">BoardFilters</text>
+  <text x="1010" y="936" class="node-subtitle">quick + advanced query</text>
+  <text x="1010" y="956" class="node-code">board-filters.tsx</text>
+
+  <rect x="1180" y="870" width="230" height="110" class="node node-dnd" />
+  <text x="1295" y="906" class="node-title">DragDropProvider</text>
+  <text x="1295" y="929" class="node-subtitle">pointer + keyboard sensors</text>
+  <text x="1295" y="950" class="node-subtitle">announcements + collision</text>
+  <rect x="1236" y="956" width="118" height="18" fill="#ffedd5" class="pill" />
+  <text x="1295" y="969" class="pill-text">@dnd-kit/react</text>
+
+  <rect x="1530" y="880" width="230" height="90" class="node node-react" />
+  <text x="1645" y="913" class="node-title">Dialogs + sheets</text>
+  <text x="1645" y="936" class="node-subtitle">create · task details · shortcuts</text>
+  <text x="1645" y="956" class="node-code">Base UI primitives</text>
+
+  <rect x="1045" y="1030" width="230" height="95" class="node node-dnd" />
+  <text x="1160" y="1063" class="node-title">TaskColumn × 3</text>
+  <text x="1160" y="1086" class="node-subtitle">droppable + sortable group</text>
+  <text x="1160" y="1107" class="node-code">task-column.tsx</text>
+
+  <rect x="1345" y="1030" width="230" height="95" class="node node-dnd" />
+  <text x="1460" y="1063" class="node-title">DragOverlay</text>
+  <text x="1460" y="1086" class="node-subtitle">TaskDragPreview</text>
+  <text x="1460" y="1107" class="node-code">@dnd-kit/react</text>
+
+  <rect x="900" y="1170" width="230" height="90" class="node node-virtual" />
+  <text x="1015" y="1203" class="node-title">useVirtualizer</text>
+  <text x="1015" y="1226" class="node-subtitle">bounded mounted rows + overscan</text>
+  <text x="1015" y="1246" class="node-code">@tanstack/react-virtual</text>
+
+  <rect x="1195" y="1170" width="230" height="90" class="node node-react" />
+  <text x="1310" y="1203" class="node-title">TaskCard</text>
+  <text x="1310" y="1226" class="node-subtitle">task summary + pending indicator</text>
+  <text x="1310" y="1246" class="node-code">task-card.tsx</text>
+
+  <rect x="1490" y="1170" width="230" height="90" class="node node-dnd" />
+  <text x="1605" y="1203" class="node-title">useSortable</text>
+  <text x="1605" y="1226" class="node-subtitle">drag handle + transform + status</text>
+  <text x="1605" y="1246" class="node-code">@dnd-kit/react</text>
+
+  <path d="M1295 980 V1005 H1160 V1030" class="edge-render" />
+  <path d="M1295 980 V1005 H1460 V1030" class="edge-render" />
+  <path d="M1160 1125 V1145 H1015 V1170" class="edge-render" />
+  <path d="M1160 1125 V1145 H1310 V1170" class="edge-render" />
+  <path d="M1425 1215 H1490" class="edge-render" />
+
+  <path d="M202 685 V755 H440 V880" class="edge-state" />
+  <path d="M202 685 V750 H725 V880" class="edge-state" />
+  <path d="M202 685 V745 H1010 V880" class="edge-state" />
+  <path d="M202 685 V735 H1645 V880" class="edge-state" />
+  <path d="M202 495 V725 H1310 V1170" class="edge-data" />
+  <text x="985" y="716" class="edge-label">optimistic tasks + pending IDs flow to the board</text>
+
+  <text x="55" y="1284" class="section-note">Library placement: next-themes in Providers/Header · TanStack Query in Providers/TaskOperations · Zustand across board state and offline queue · dnd-kit around columns/cards · TanStack Virtual inside each TaskColumn.</text>
+</svg>
