@@ -5,7 +5,8 @@ import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, closestCenter, 
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
 import * as m from "motion/react-m"
 import { useTheme } from "next-themes"
-import { Keyboard, Laptop, Mail, Moon, Plus, Redo2, Sun, Undo2, Zap } from "lucide-react"
+import { BookOpenCheck, Keyboard, Laptop, Mail, Moon, Plus, Redo2, Sun, Undo2, Zap } from "lucide-react"
+import Link from "next/link"
 import { FaGithub, FaLinkedin } from "react-icons/fa"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -114,6 +115,7 @@ function AppHeader({ undo, redo, undoLabel, redoLabel, onCreate, onShortcuts }: 
     <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" disabled={!undoLabel} onClick={undo} aria-label={undoLabel ? `Undo ${undoLabel}` : "Nothing to undo"} />}><Undo2 /></TooltipTrigger><TooltipContent>{undoLabel ? `Undo: ${undoLabel}` : "Nothing to undo"}</TooltipContent></Tooltip>
     <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" disabled={!redoLabel} onClick={redo} aria-label={redoLabel ? `Redo ${redoLabel}` : "Nothing to redo"} />}><Redo2 /></TooltipTrigger><TooltipContent>{redoLabel ? `Redo: ${redoLabel}` : "Nothing to redo"}</TooltipContent></Tooltip>
     <Button variant="outline" onClick={onShortcuts} aria-label="Keyboard Shortcuts"><Keyboard /><span className="hidden sm:inline">Keyboard Shortcuts</span><span className="hidden rounded border px-1 font-mono text-[10px] text-muted-foreground md:inline">?</span></Button>
+    <Button variant="outline" nativeButton={false} render={<Link href="/interview-guide" />} aria-label="Open interview guide"><BookOpenCheck /><span className="hidden lg:inline">Interview guide</span></Button>
     <DropdownMenu>
       <Tooltip><TooltipTrigger render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Choose theme" />} />}><Moon /></TooltipTrigger><TooltipContent>Choose theme</TooltipContent></Tooltip>
       <DropdownMenuContent align="end">

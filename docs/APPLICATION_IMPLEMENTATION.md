@@ -1,6 +1,6 @@
 # Task Board: Complete Implementation Guide
 
-This document explains how the application works from the first HTTP render through client hydration, local persistence, task mutations, filtering, collaboration simulation, conflict resolution, history, testing, and deployment. It describes the current working tree as inspected on July 22, 2026.
+This document explains how the application works from the first HTTP render through client hydration, local persistence, task mutations, filtering, collaboration simulation, conflict resolution, history, testing, and deployment. It also teaches the syntax and engineering patterns you need to defend the implementation in an interview. It describes the current working tree as inspected on July 29, 2026.
 
 ## 1. What the application is
 
@@ -794,7 +794,7 @@ The UI directory is a project-owned component layer rather than calls to shadcn 
 | File | Implementation and current role |
 | --- | --- |
 | `alert.tsx` | CVA-styled semantic alert container, title, description, and action; used for edit conflicts |
-| `avatar.tsx` | Base UI avatar image/fallback, badge, and group helpers; available but unused by the board |
+| `avatar.tsx` | Base UI avatar image/fallback, badge, and group helpers; used by collaboration presence indicators |
 | `badge.tsx` | CVA badge variants with Base UI render composition; used for counts, tags, priority, version, and shortcuts |
 | `button.tsx` | Base UI button plus CVA size/variant system; the common action primitive |
 | `card.tsx` | Styled structural card sections; task cards use Card and CardContent |
@@ -811,7 +811,7 @@ The UI directory is a project-owned component layer rather than calls to shadcn 
 | `sheet.tsx` | Dialog-based edge sheet with side variants and close control; used for task details |
 | `skeleton.tsx` | Animated placeholder block; used by `LoadingBoard` |
 | `sonner.tsx` | Theme-aware Sonner toaster with Lucide status icons; mounted globally |
-| `switch.tsx` | Base UI switch; used for automatic simulation |
+| `switch.tsx` | Base UI switch; used for automatic simulation and the forced-offline control |
 | `textarea.tsx` | Styled native textarea; used for task description |
 | `tooltip.tsx` | Base UI provider, root, trigger, and portal content with arrow; used in the header |
 
@@ -848,7 +848,14 @@ Vitest runs in jsdom, loads `@testing-library/jest-dom`, resolves TypeScript ali
 - readable query parameter generation and parse equivalence;
 - mixed per-rule connectors with AND precedence.
 
-Current unit result: 2 files, 9 tests, all passing.
+`features/collaboration/description-crdt.test.ts` verifies:
+
+- the unchanged side yields to the changed side;
+- concurrent additions converge even when branch arrival order is reversed;
+- base blocks deleted by either participant stay removed;
+- identical concurrent additions are deduplicated.
+
+Current unit result: 3 files, 13 tests, all passing.
 
 ### End-to-end tests
 
@@ -861,10 +868,22 @@ Playwright runs Chromium against a reused or automatically started `npm run dev`
 3. task creation appears optimistically and exposes the pending counter before confirmation;
 4. a pointer drag crosses columns without the overlay animating back to its old column;
 5. Developer Tools can trigger remote activity;
-6. an advanced mixed-connector query updates readable URL parameters, filters results, saves a favorite, and survives reload;
-7. normal search synchronizes to the URL and survives reload.
+6. simulated remote editing presence appears, locks task controls, and can be released;
+7. a description conflict can be resolved with the deterministic CRDT-like manual merge;
+8. optimistic work queues while offline and commits after reconnection;
+9. an advanced mixed-connector query updates readable URL parameters, filters results, saves a favorite, and survives reload;
+10. normal search synchronizes to the URL and survives reload.
 
-Current browser result: 7 tests, all passing.
+`tests/e2e/interview-guide.spec.ts` verifies:
+
+1. the study route reloads without browser runtime errors;
+2. lesson completion persists across reload;
+3. the virtualization lab updates mounted geometry when overscan changes;
+4. the system-flow lab advances and switches scenarios;
+5. interview answers can be revealed and confidence-rated;
+6. mobile study navigation opens and selects a lesson.
+
+Current browser result: 16 tests, all passing when the two suites are run serially. The full eight-worker run can exceed the development server's 30-second test timeout on this machine; the same original and new journeys pass with `--workers=1`.
 
 ### Gaps in automated coverage
 
@@ -874,7 +893,7 @@ The current suite does not directly exercise:
 - forced failure rollback;
 - pending-operation resume across reload;
 - undo/redo success and failure;
-- conflict field selection paths;
+- conflict take-mine, take-theirs, and non-description field selection paths;
 - automatic simulation timing;
 - 1,000-task mounted-node bounds;
 - theme behavior;
@@ -902,8 +921,8 @@ ESLint composes Next.js core-web-vitals and TypeScript rules. Generated Next/bui
 
 Verified current results:
 
-- unit tests: pass, 9/9;
-- end-to-end tests: pass, 7/7;
+- unit tests: pass, 13/13;
+- end-to-end tests: pass, 16/16 across the original board and interview-guide suites when run serially;
 - lint: exits successfully with one known TanStack Virtual/React Compiler warning;
 - production build: pass;
 - route `/`: statically prerendered.
@@ -1002,6 +1021,14 @@ No persistent server volume is required or useful: all application state is per-
 | `features/query-builder/query-builder.tsx` | Recursive query editor and favorites UI |
 | `features/query-builder/use-query-url-sync.ts` | Hydration-ordered inbound/outbound URL synchronization and popstate handling |
 
+### Interview guide feature
+
+| File | Responsibility |
+| --- | --- |
+| `app/interview-guide/page.tsx` | Static route metadata and Server Component entry for the study experience |
+| `features/interview-guide/content.ts` | Ten lesson modules, 35 interview questions, five system flows, code samples, and accent metadata |
+| `features/interview-guide/interview-guide.tsx` | Responsive learning UI, persistent progress, code explorer, interactive labs, flow stepper, and confidence drill |
+
 ### Supporting features and state
 
 | File | Responsibility |
@@ -1010,6 +1037,9 @@ No persistent server volume is required or useful: all application state is per-
 | `features/developer-tools/developer-tools.tsx` | Simulation, failure, dataset, countdown, log, and reset controls |
 | `features/keyboard-shortcuts/use-keyboard-shortcuts.ts` | Global shortcut event handling and editable-target guard |
 | `features/keyboard-shortcuts/shortcuts-dialog.tsx` | Platform-aware shortcut reference and live history labels |
+| `features/collaboration/network-status.tsx` | Browser/forced network state, offline banner, and reconnect feedback |
+| `features/collaboration/presence-indicators.tsx` | Accessible viewing/editing avatar summaries rendered on cards |
+| `features/collaboration/description-crdt.ts` | Deterministic sentence-block reconciliation for description conflicts |
 | `lib/utils.ts` | Tailwind-aware class-name composition |
 
 ### Tests and configuration
@@ -1018,7 +1048,9 @@ No persistent server volume is required or useful: all application state is per-
 | --- | --- |
 | `features/tasks/task-logic.test.ts` | Domain, seed, filter, and reconciliation unit tests |
 | `features/query-builder/query-engine.test.ts` | Query evaluation, editing, precedence, and URL unit tests |
+| `features/collaboration/description-crdt.test.ts` | Convergence, deletion, unchanged-branch, and deduplication tests |
 | `tests/e2e/board.spec.ts` | Core user-flow browser tests |
+| `tests/e2e/interview-guide.spec.ts` | Study route runtime, progress, labs, drill, and mobile navigation tests |
 | `vitest.config.mts` | jsdom unit runner, React/alias plugins, coverage reporters |
 | `vitest.setup.ts` | jest-dom matcher registration |
 | `playwright.config.ts` | Chromium project, local dev server, base URL, failure traces |
@@ -1125,8 +1157,1370 @@ The implementation described here was checked against:
 - the repository's Next.js 16.2 bundled guides for App Router structure, server/client boundaries, and error handling;
 - the live local page and its accessibility tree;
 - `npm test`;
-- `npm run test:e2e`;
+- `npx playwright test board.spec.ts --workers=1`;
+- `npx playwright test interview-guide.spec.ts --workers=1`;
 - `npm run lint`;
 - `npm run build`.
 
-At the time of verification, every test and the production build passed. Lint completed with the single documented `useVirtualizer()` React Compiler compatibility warning and no errors.
+At the time of verification, all 13 unit tests, all 16 serial browser tests, and the production build passed. Lint completed with the single documented `useVirtualizer()` React Compiler compatibility warning and no errors.
+
+---
+
+# Part II: Concepts, syntax, and patterns
+
+The first part is the implementation reference. This part turns the same code into interview knowledge. For each pattern, be ready to explain four things:
+
+1. what problem it solves;
+2. where this repository uses it;
+3. why it was chosen over a simpler alternative;
+4. where the current implementation stops being production-grade.
+
+## 33. How to present the application in an interview
+
+### The 30-second answer
+
+> This is a Next.js 16 task board that remains responsive with 1,000 tasks. It uses TanStack Query for the task collection and optimistic mutation lifecycle, Zustand for durable UI and workflow state, TanStack Virtual to render only visible cards, and dnd-kit for accessible pointer and keyboard movement. The backend is intentionally simulated in `localStorage`, including latency, failure, offline queuing, remote edits, presence, and conflict resolution.
+
+### The 90-second answer
+
+> The main architectural decision is to separate confirmed data from projected data. Confirmed tasks live in a validated `localStorage` repository. Every local action becomes a persisted operation containing complete before and after snapshots, a predetermined outcome, and a deadline. The UI immediately shows confirmed tasks with every pending operation replayed over them. Success commits to the confirmed store and failure removes only the failed operation, then rebuilds the projection. This avoids restoring a stale whole-array snapshot.
+>
+> TanStack Query owns the task collection because it models server state and mutation lifecycles. Zustand owns filters, dialogs, edit drafts, history, pending operations, simulation settings, presence, and conflicts. The board derives filtered and grouped columns with memoized selectors. Each column has its own TanStack Virtual virtualizer, while dnd-kit supplies droppable columns and sortable cards. The advanced query builder is a recursive AST that is immutably edited, compiled into a predicate, and serialized to readable URL rules. Collaboration is a deterministic single-browser simulation, not a real distributed system.
+
+### The architecture answer
+
+Use this order when drawing the application:
+
+```text
+Next.js route and provider shell
+        ↓
+Board UI and feature components
+        ↓
+TaskOperations context façade
+        ↓
+TanStack Query cache + Zustand workflow store
+        ↓
+validated localStorage repository
+```
+
+Do not begin by listing libraries. Begin with responsibilities and data flow, then name the library that implements each responsibility.
+
+## 34. JavaScript and TypeScript syntax used in the project
+
+### ES module imports and type-only imports
+
+```ts
+import { useMemo, type ReactNode } from "react"
+import type { Task } from "@/features/tasks/types"
+```
+
+- A normal import may produce a runtime JavaScript dependency.
+- `import type` is erased by TypeScript and exists only for checking.
+- `@/` is a `tsconfig.json` path alias for the repository root.
+- Named imports use braces; default imports do not.
+
+Interview point: type-only imports make runtime intent explicit and avoid accidentally preserving type dependencies in emitted module code.
+
+### Object destructuring and default values
+
+```ts
+function TaskForm({
+  value,
+  onChange,
+  submitLabel = "Save task",
+  disabled = false,
+}: TaskFormProps) {
+  // ...
+}
+```
+
+Destructuring extracts named properties. Defaults apply only when a property is `undefined`, not when it is `null`, `false`, or an empty string.
+
+### Spread syntax and immutable updates
+
+```ts
+const nextTask = { ...before, ...draft }
+const nextTags = [...new Set([...original.tags, "collaboration"])]
+```
+
+- Object spread copies enumerable fields from left to right; later fields win.
+- Array spread creates a new array.
+- The nested spreads add a tag and `Set` removes duplicates.
+- These are shallow copies. Nested objects still share references unless copied separately.
+
+React and Zustand updates use new references because reference changes are how selectors, memoization, and rendering detect updated state.
+
+### Optional chaining and nullish coalescing
+
+```ts
+const taskId = after?.id ?? before!.id
+const tasks = query.data ?? []
+```
+
+- `after?.id` stops and yields `undefined` when `after` is `null` or `undefined`.
+- `a ?? b` chooses `b` only when `a` is `null` or `undefined`.
+- This differs from `a || b`, which also replaces `0`, `false`, and `""`.
+- `before!` is a non-null assertion. It tells TypeScript the value exists but adds no runtime check. It is safe here only because the operation contract requires either `before` or `after`.
+
+### Literal unions
+
+```ts
+type FailureMode = "random" | "success" | "failure"
+type OperationKind = "create" | "update" | "undo" | "redo" | "resolve"
+```
+
+A union restricts values to a known set. Compared with a TypeScript `enum`, string unions:
+
+- emit no runtime enum object;
+- serialize naturally to JSON;
+- narrow well in conditionals;
+- align directly with Zod string enums.
+
+### Utility types
+
+```ts
+type TaskDraft = Pick<
+  Task,
+  "title" | "description" | "status" | "priority" | "assignee" | "tags"
+>
+
+type TaskPatch = Partial<Omit<Task, "id" | "createdAt">>
+```
+
+- `Pick<T, K>` keeps selected fields.
+- `Omit<T, K>` removes selected fields.
+- `Partial<T>` makes every property optional.
+- `keyof TaskDraft` produces the union of draft field names.
+- `Array<keyof TaskDraft>` is an array containing only those names.
+
+Interview point: derive related types from the source model instead of duplicating them. If `Task` changes, TypeScript reveals dependent code that must be reconsidered.
+
+### Records, maps, and sets
+
+```ts
+const grouped = Object.fromEntries(/* ... */) as Record<TaskStatus, Task[]>
+const pendingIds = new Set(pending.map((operation) => operation.taskId))
+const presenceByTask = new Map<string, PresenceEntry[]>()
+```
+
+- `Record<K, V>` models an object with a known key set.
+- `Set` provides fast membership checks and uniqueness.
+- `Map` is useful when keys are dynamic and values are built incrementally.
+- The board uses a `Set` so each card can test pending status without repeatedly scanning all operations.
+
+### Generics
+
+```ts
+function randomItem<T>(items: readonly T[]): T {
+  return items[Math.floor(Math.random() * items.length)]!
+}
+```
+
+`T` represents the element type supplied by the caller. If the input is `readonly Priority[]`, the output is inferred as `Priority`. `readonly` promises the function will not mutate the input array.
+
+### `as const` and `satisfies`
+
+```ts
+const TASKS_KEY = ["tasks"] as const
+
+const operation = {
+  // ...
+} satisfies PendingOperation
+```
+
+- `as const` preserves narrow literal types and makes the tuple readonly.
+- `satisfies` verifies that an expression matches a type without replacing its useful inferred type.
+- A blunt `as PendingOperation` assertion would tell the compiler to trust the author; `satisfies` asks the compiler to check the object.
+
+### Discriminated unions
+
+```ts
+type QueryNode = QueryCondition | QueryGroup
+
+if (node.kind === "condition") {
+  return conditionMatches(task, node)
+}
+return node.children.map(compile)
+```
+
+Both query node types have a `kind` property with different literal values. Checking `kind` narrows the union, so TypeScript knows which fields exist. This pattern is ideal for ASTs, reducers, state machines, and protocol messages.
+
+### Zod inference
+
+```ts
+export const taskSchema = z.object({
+  id: z.string(),
+  status: z.enum(["todo", "in-progress", "done"]),
+  // ...
+})
+
+export type Task = z.infer<typeof taskSchema>
+```
+
+TypeScript checks code during development but disappears at runtime. Zod validates untrusted runtime values, such as parsed `localStorage` JSON and URL payloads. Inferring the TypeScript type from the schema prevents two separate definitions from drifting.
+
+### JSX expressions and list keys
+
+```tsx
+{STATUSES.map((status) => (
+  <TaskColumn key={status} status={status} tasks={grouped[status]} />
+))}
+```
+
+- Braces enter JavaScript expression mode inside JSX.
+- `map` converts data into elements.
+- `key` gives React stable sibling identity. It is not passed as a normal prop.
+- Stable task IDs are better keys than indexes because filtering, sorting, and movement change indexes.
+
+### Controlled components
+
+```tsx
+<Input
+  value={value.title}
+  onChange={(event) => onChange({ title: event.target.value })}
+/>
+```
+
+The React state is the source of truth. The input renders the current value and emits changes upward. This enables validation, persisted drafts, conflict comparison, reset, and reuse of the same form for create and edit.
+
+### Closures and stale values
+
+Event handlers close over values from the render that created them:
+
+```ts
+const moveTask = useCallback(() => {
+  // reads tasks from this render
+}, [tasks])
+```
+
+Dependencies make React recreate the callback when captured inputs change. In long-running mutation callbacks, the code instead calls `useBoardStore.getState()` so it reads the latest imperative state rather than a potentially stale render snapshot.
+
+## 35. React and Next.js rendering concepts
+
+### Server Components and Client Components
+
+Files in `app/` are Server Components by default. `app/layout.tsx` and `app/page.tsx` can therefore render without sending their component logic to the browser. A file beginning with:
+
+```ts
+"use client"
+```
+
+declares a client module boundary. Client Components can use state, effects, event handlers, context, and browser APIs. Their props crossing from a Server Component must be serializable.
+
+In this project:
+
+- `layout.tsx` and `page.tsx` are server-side shell components;
+- `providers.tsx` is the first client boundary;
+- the interactive board and its imported feature graph execute on the client.
+
+The boundary is intentionally near the route root because nearly the whole application is browser-interactive and backed by `localStorage`.
+
+### Prerendering and hydration
+
+On the initial request:
+
+1. Next.js renders HTML for the route.
+2. The browser displays that HTML.
+3. React loads the client bundle.
+4. Hydration attaches event handlers and reconciles the server and client trees.
+
+The query uses deterministic `initialData`, so both sides initially render the same 30 tasks. After hydration, the query refetches from browser storage. Reading random or browser-only data during the first render would risk a hydration mismatch.
+
+`suppressHydrationWarning` is used narrowly for theme-controlled root elements because `next-themes` may change the class before React hydrates. It does not repair general hydration bugs.
+
+### Provider composition
+
+React context makes cross-cutting services available below a provider:
+
+```tsx
+<ThemeProvider>
+  <PersistQueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      {children}
+    </TooltipProvider>
+  </PersistQueryClientProvider>
+</ThemeProvider>
+```
+
+Provider order matters when an inner provider or child consumes an outer context. The `Providers` component constructs the query client and persister in lazy `useState` initializers:
+
+```ts
+const [queryClient] = useState(() => new QueryClient(/* ... */))
+```
+
+The initializer runs for the component instance instead of constructing a new client on every render.
+
+### Context as a feature façade
+
+`TaskOperationsContext` exposes a small application-level API:
+
+```ts
+interface TaskOperationsValue {
+  tasks: Task[]
+  execute: /* ... */
+  undo: () => void
+  redo: () => void
+  triggerRemote: /* ... */
+  resetDataset: /* ... */
+}
+```
+
+UI components do not need to know repository keys, mutation callbacks, or query-cache mechanics. This is a façade pattern implemented with React Context.
+
+The custom hook guards correct usage:
+
+```ts
+export function useTaskOperations() {
+  const context = useContext(TaskOperationsContext)
+  if (!context) {
+    throw new Error("useTaskOperations must be used inside TaskOperationsProvider")
+  }
+  return context
+}
+```
+
+Failing immediately is better than producing a later undefined-property error.
+
+### Hook responsibilities
+
+| Hook | Role in this application |
+| --- | --- |
+| `useState` | Component-local drafts, dialog choices, active drag card, stable provider instances |
+| `useEffect` | Browser subscriptions, hydration recovery, timers, presence lifecycle, URL synchronization |
+| `useMemo` | Expensive or identity-sensitive derived values: predicates, groups, maps, context value |
+| `useCallback` | Stable command functions passed to children or used by effects |
+| `useRef` | DOM scroll element and previous online state without causing renders |
+| `useContext` | Task operation façade |
+| `useId` | Stable accessible form-control IDs |
+
+### Effects and cleanup
+
+An effect synchronizes React with an external system:
+
+```ts
+useEffect(() => {
+  window.addEventListener("online", sync)
+  return () => window.removeEventListener("online", sync)
+}, [sync])
+```
+
+The returned function cleans up the subscription. Timers and presence entries follow the same pattern. Missing cleanup can cause duplicate listeners, memory leaks, and updates after a component is gone.
+
+Effects should not be used for values that can be calculated while rendering. Filtering and grouping are derivations, so the board uses `useMemo`, not an effect plus extra state.
+
+### `memo`, `useMemo`, and `useCallback` are different
+
+- `memo(TaskCard)` can skip re-rendering a component when its props are shallowly equal.
+- `useMemo(factory, deps)` caches a computed value.
+- `useCallback(fn, deps)` caches a function identity; it is equivalent to `useMemo(() => fn, deps)`.
+
+These are performance tools, not correctness tools. They help here because a stress dataset could otherwise create many unnecessary card renders and unstable props.
+
+### Selector subscriptions in Zustand
+
+```ts
+const search = useBoardStore((state) => state.search)
+```
+
+This component subscribes to one selected value. By contrast:
+
+```ts
+const state = useBoardStore()
+```
+
+subscribes to the entire store and re-renders for any store change. `DeveloperTools` accepts that broader behavior because it displays many store fields. Board cards select only the action they need.
+
+## 36. State ownership: local state, Zustand, TanStack Query, and storage
+
+### The ownership rule
+
+Use the narrowest suitable owner:
+
+| State kind | Owner | Example |
+| --- | --- | --- |
+| Temporary component interaction | React local state | active drag card, conflict dialog choices |
+| Shared UI/workflow state | Zustand | filters, selected task, history, presence |
+| Server-like async collection | TanStack Query | visible task list and mutation lifecycle |
+| Durable confirmed data | repository storage | confirmed tasks |
+| Shareable navigation state | URL | quick and advanced filters |
+
+Duplicating the same authority in multiple stores causes synchronization bugs. This application deliberately distinguishes confirmed tasks, pending operations, and the visible projection.
+
+### TanStack Query
+
+The task query:
+
+```ts
+const query = useQuery({
+  queryKey: ["tasks"],
+  queryFn: loadConfirmedTasks,
+  initialData: () => makeSeedTasks(),
+  refetchOnMount: "always",
+})
+```
+
+- `queryKey` is the stable cache identity.
+- `queryFn` supplies confirmed data.
+- `initialData` allows deterministic first rendering.
+- `refetchOnMount` replaces the initial or persisted view with validated repository data.
+
+The mutation:
+
+```ts
+const mutation = useMutation({
+  mutationFn: runOperation,
+  onSuccess: reconcileAfterSuccess,
+  onError: reconcileAfterFailure,
+})
+```
+
+Mutation callbacks receive the variables passed to `mutate`. The project performs its optimistic projection before calling `mutate`, rather than using `onMutate`, because the same `execute` command must also persist operations and support offline work that does not start a mutation immediately.
+
+### Why this is called server state without a server
+
+“Server state” means asynchronous external data with fetch, stale, cache, and mutation semantics. The current repository is browser-local, but it intentionally behaves like an API boundary. Replacing it with HTTP would preserve much of the UI architecture, although conflict checks and security must move server-side.
+
+### Zustand middleware
+
+```ts
+export const useBoardStore = create<BoardState>()(
+  persist(
+    (set, get) => ({ /* state and actions */ }),
+    {
+      name: "task-board:client:v1",
+      partialize: (state) => ({ /* durable subset */ }),
+    }
+  )
+)
+```
+
+- `create` builds the hook-backed store.
+- `set` updates state.
+- `get` reads the current store inside an action.
+- `persist` serializes selected state.
+- `partialize` prevents transient values and functions from being persisted.
+- `onRehydrateStorage` marks restoration complete.
+
+Actions centralize invariants. For example, `addHistory` caps history at 50 entries and clears the redo future whenever a new user action branches history.
+
+### The four task states
+
+Interviewers may test whether “task state” has been treated as one vague concept. It has four forms:
+
+1. **Confirmed database:** durable operations that succeeded.
+2. **Pending operation log:** durable intentions that have not resolved.
+3. **Query projection:** confirmed data with pending operations replayed.
+4. **Edit draft:** form-local intent that has not yet become an operation.
+
+Remote edits change confirmed data. Local typing changes only the draft. Saving produces a pending operation and updates the projection. Success moves the change into confirmed data.
+
+### Optimistic update algorithm
+
+```text
+confirmed C
+pending operations P1, P2, ... Pn
+visible = apply(apply(apply(C, P1), P2), ... Pn)
+```
+
+When `P2` fails, the app does not restore a captured old screen:
+
+```text
+visible = replay(latest confirmed, [P1, P3, ... Pn])
+```
+
+This is operation-log replay. It preserves unrelated optimistic work and any confirmed updates that occurred after the failed request started.
+
+### Why the outcome and deadline are persisted
+
+Choosing the outcome at queue time makes behavior deterministic across reload. Persisting `dueAt` prevents a reload from automatically restarting a fresh two-second wait for online work. Offline operations are deliberately marked `waitForConnection` and receive a fresh normal latency after reconnection.
+
+### Undo and redo as commands
+
+History stores `before` and `after` snapshots. Undo does not directly mutate the array. It submits a normal optimistic operation whose target is `before`; redo targets `after`. Therefore undo and redo exercise the same latency, offline, success, failure, persistence, and reconciliation paths as ordinary edits.
+
+Current limitation: the history cursor moves before the inverse request resolves. If that request fails, the task rolls back correctly, but the past/future cursor is not restored.
+
+### Interview drill
+
+**Why not keep everything in Zustand?**
+It could work, but it would mix asynchronous entity/cache behavior with UI workflow behavior. TanStack Query already provides query identity, cache updates, mutation callbacks, freshness, and persistence integration. Zustand remains focused on client workflow state.
+
+**Why not rely only on TanStack Query?**
+Dialogs, keyboard state, persisted draft metadata, undo stacks, simulation options, and presence are not naturally one server query. Storing them in a query cache would blur semantics and make updates awkward.
+
+**Why are pending operations persisted separately from the query cache?**
+A cached projected array cannot explain which changes are confirmed, how to resume requests, or which optimistic change to remove on failure. The operation log preserves causality.
+
+## 37. TanStack Virtual deep dive
+
+### What virtualization solves
+
+Without virtualization, 1,000 tasks could create 1,000 card component trees, selects, event bindings, and layout boxes. Virtualization keeps the full logical list but mounts only rows near the visible scroll window.
+
+It does not reduce the number of task objects in memory and does not fetch pages from a server. It reduces rendered DOM and layout work.
+
+### One virtualizer per column
+
+Each status column scrolls independently, so each column needs its own virtualizer:
+
+```ts
+const parentRef = useRef<HTMLDivElement>(null)
+
+const virtualizer = useVirtualizer({
+  count: tasks.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 190,
+  overscan: 8,
+  getItemKey: (index) => tasks[index]?.id ?? index,
+  initialRect: { width: 400, height: 600 },
+  useFlushSync: false,
+})
+```
+
+Option meanings:
+
+| Option | Meaning |
+| --- | --- |
+| `count` | Total logical row count |
+| `getScrollElement` | Function returning the element whose scroll offset is observed |
+| `estimateSize` | Initial estimated row height before measurement |
+| `overscan` | Extra rows rendered before and after the visible range |
+| `getItemKey` | Stable identity for measurement caching |
+| `initialRect` | Deterministic initial viewport geometry for prerendering |
+| `useFlushSync: false` | Avoid forcing React synchronous updates for virtualizer notifications |
+
+The estimate does not need to be exact because real rows are measured. A reasonable estimate reduces scrollbar jumps before measurements settle.
+
+### The spacer-and-translate layout
+
+```tsx
+<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+  {virtualizer.getVirtualItems().map((row) => (
+    <div
+      key={tasks[row.index].id}
+      data-index={row.index}
+      ref={virtualizer.measureElement}
+      style={{
+        position: "absolute",
+        transform: `translateY(${row.start}px)`,
+      }}
+    >
+      <TaskCard task={tasks[row.index]} />
+    </div>
+  ))}
+</div>
+```
+
+There are two coordinate systems:
+
+1. the spacer has the height of the entire logical list, so the browser scrollbar has the correct range;
+2. each mounted row is absolutely positioned and translated to its logical offset.
+
+`measureElement` observes the actual card height. `data-index` lets the virtualizer associate the measured DOM node with its logical row.
+
+### Why stable keys matter more with virtualization
+
+Rows are repeatedly mounted and unmounted as the user scrolls. A task ID lets React and the measurement cache recognize the same logical item after filtering or reordering. An index key could reuse a row's DOM state for a different task.
+
+### Overscan tradeoff
+
+- Too little overscan can reveal blank space during fast scrolling.
+- Too much overscan mounts more DOM and weakens the performance benefit.
+- Eight rows is a pragmatic buffer for card-sized content.
+
+### Virtualization and drag-and-drop
+
+Only mounted cards can expose DOM rectangles to dnd-kit. The destination column itself is always droppable, so a task can still move to a status even if a specific far-away target row is not mounted. Precise dragging to an unmounted row would require a more advanced integration, auto-scrolling strategy, or keyboard/status control.
+
+The status select is both an accessibility alternative and a robust non-spatial fallback.
+
+### What to say about the React Compiler warning
+
+The installed virtualizer exposes functions that React's compiler lint cannot safely memoize. The code explicitly uses `useFlushSync: false`, and lint reports the known compatibility warning without an error. Do not claim the warning is a runtime failure. In production work, track the library's supported integration and measure behavior before suppressing warnings broadly.
+
+### Interview drill
+
+**Virtualization versus pagination?**
+Pagination changes which data is loaded or presented as pages. Virtualization keeps a continuous list and changes only which DOM rows are mounted. They can be combined.
+
+**Why not virtualize the entire board once?**
+The columns have independent scroll containers and logical lists. One virtualizer would not correctly model three scroll offsets.
+
+**Why is `initialRect` useful here?**
+The app is prerendered before the browser ref exists. Supplying deterministic geometry gives the virtualizer a stable initial range and supports hydration consistency.
+
+## 38. dnd-kit, sorting, and fractional positions
+
+### The three layers
+
+1. `DndContext` owns sensors, collision detection, announcements, and drag lifecycle.
+2. Each column calls `useDroppable`.
+3. Each task card calls `useSortable`.
+
+```ts
+const sensors = useSensors(
+  useSensor(PointerSensor, {
+    activationConstraint: { distance: 6 },
+  }),
+  useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates,
+  })
+)
+```
+
+The pointer must move six pixels before a drag activates, which reduces accidental drags when the user intends to click the card. The keyboard sensor supplies an accessible spatial interaction.
+
+### Sortable card syntax
+
+```ts
+const sortable = useSortable({
+  id: task.id,
+  data: { task },
+  disabled: Boolean(lockedBy),
+})
+
+const style = {
+  transform: CSS.Transform.toString(sortable.transform),
+  transition: sortable.transition,
+}
+```
+
+The hook returns:
+
+- `setNodeRef` for the draggable/sortable element;
+- `setActivatorNodeRef`, `attributes`, and `listeners` for the handle;
+- a transform and transition during movement;
+- state such as `isDragging`.
+
+Keeping listeners on the grip handle lets the rest of the card remain clickable and interactive.
+
+### Droppable column syntax
+
+```ts
+const droppable = useDroppable({
+  id: `column-${status}`,
+  data: { status },
+})
+```
+
+The scroll container receives `droppable.setNodeRef`. `droppable.isOver` drives destination highlighting.
+
+### Drag lifecycle
+
+```text
+onDragStart
+→ find active task
+→ render DragOverlay preview
+
+onDragEnd
+→ clear preview
+→ identify task under `active.id`
+→ resolve target task or target column from `over.id`
+→ compute status and position
+→ execute optimistic update
+```
+
+`DragOverlay dropAnimation={null}` prevents the overlay from animating back toward stale pre-update coordinates while the optimistic card has already moved columns.
+
+### Collision detection
+
+`closestCenter` chooses the droppable whose center is closest to the active rectangle's center. It is a practical board default, but dense lists, nested droppables, or unusual card sizes may need a custom collision strategy.
+
+### Fractional indexing
+
+The code does not renumber every task when one moves. It chooses a position between neighbors:
+
+```ts
+const position =
+  before && after
+    ? (before.position + after.position) / 2
+    : before
+      ? before.position + 1000
+      : after
+        ? after.position - 1000
+        : 0
+```
+
+Examples:
+
+| Destination | New position |
+| --- | --- |
+| Between 1000 and 2000 | 1500 |
+| After 2000 | 3000 |
+| Before 1000 | 0 |
+| Empty column | 0 |
+
+This makes a move an O(1) position update after locating neighbors, instead of rewriting all following tasks. Repeated insertions into the same gap eventually produce very close floating-point values, so a production system should periodically normalize ranks or use a dedicated sortable-ranking representation.
+
+### Interview drill
+
+**Why keep both drag-and-drop and a status select?**
+The select is easier for keyboard, screen-reader, touch, and precision-limited users. It also works when virtualization means a desired row is not mounted.
+
+**How is a remote editing lock enforced?**
+The board derives `lockedByTask` from presence. It disables `useSortable`, the grip, status select, and task form, and rechecks the lock inside `moveTask`. UI disabling alone is not a security boundary; a real backend must enforce authorization/version rules.
+
+## 39. Query builder as an AST, compiler, and parser
+
+### Abstract syntax tree
+
+The query is data, not executable code:
+
+```ts
+type QueryNode = QueryCondition | QueryGroup
+
+interface QueryCondition {
+  kind: "condition"
+  id: string
+  field: QueryField
+  operator: QueryOperator
+  value: string
+}
+
+interface QueryGroup {
+  kind: "group"
+  id: string
+  combinator: "and" | "or"
+  connectors?: Array<"and" | "or">
+  children: QueryNode[]
+}
+```
+
+This is an AST because it represents logical syntax as a tree. Nested groups represent parentheses. Conditions are leaves.
+
+### Recursive immutable updates
+
+```ts
+const visit = (node: QueryNode): QueryNode => {
+  if (node.id === id) return update(node)
+  return node.kind === "group"
+    ? { ...node, children: node.children.map(visit) }
+    : node
+}
+```
+
+The traversal:
+
+1. checks the current node;
+2. returns a replacement if IDs match;
+3. recursively visits children for a group;
+4. rebuilds ancestors with new references;
+5. leaves nonmatching leaf nodes unchanged.
+
+This is structural sharing: only the path to the changed node is new. It supports predictable React updates and preserves all unaffected subtrees.
+
+### Compilation into predicates
+
+`compileTaskQuery` converts a tree into a function:
+
+```ts
+type Predicate = (task: Task) => boolean
+```
+
+Each condition compiles to a leaf predicate. Each group compiles its children, splits them into AND clauses at OR connectors, and returns:
+
+```ts
+task => clauses.some(
+  clause => clause.every(
+    predicate => predicate(task)
+  )
+)
+```
+
+This expresses OR-of-ANDs and gives AND higher precedence:
+
+```text
+A OR B AND C
+= A OR (B AND C)
+```
+
+An empty group returns `true`, so an empty advanced query does not filter out every task.
+
+### Readable URL format
+
+Conditions become:
+
+```text
+rule1=priority.equals.high
+rule2=assignee.equals.You
+logic=1-or-2-and-3
+```
+
+Nested groups add parentheses. Values may contain dots because the parser takes the first two dot-separated pieces as field and operator, then rejoins the remaining pieces as the value.
+
+### Recursive-descent parser
+
+The URL parser implements a small grammar:
+
+```text
+orExpression  := andExpression ("or" andExpression)*
+andExpression := primary ("and" primary)*
+primary       := RULE_NUMBER | "(" orExpression ")"
+```
+
+Because `orExpression` calls `andExpression`, and `andExpression` consumes all adjacent AND terms first, AND has higher precedence. The parser rejects:
+
+- unknown fields or operators;
+- missing values;
+- references to missing rules;
+- unbalanced parentheses;
+- leftover tokens after a valid-looking prefix.
+
+### URL and persisted-state precedence
+
+Two effects avoid a race:
+
+1. after Zustand hydration, read and validate the URL into the store;
+2. queue a microtask that marks synchronization ready;
+3. only then let the outbound effect write store state to the URL.
+
+Without the readiness gate, persisted Zustand state could overwrite a shared URL before URL state is applied.
+
+`history.replaceState` updates the current URL without adding one browser-history entry per keystroke. A `popstate` listener still supports Back and Forward navigation.
+
+### Interview drill
+
+**Why not store a JavaScript expression and use `eval`?**
+An AST is structured, serializable, validateable, safely editable, and does not execute arbitrary code. `eval` would be a security and maintainability problem.
+
+**Why compile once with `useMemo`?**
+The query tree changes less often than board renders. Compilation creates nested closures, so caching the predicate avoids rebuilding them when unrelated state changes.
+
+**Why keep a legacy base64url decoder?**
+Previously shared links are a public compatibility surface. The readable format improves debuggability while the validated legacy path avoids breaking old links.
+
+## 40. Optimistic concurrency, offline work, presence, and CRDT-like merging
+
+### Optimistic UI versus optimistic concurrency control
+
+These are related but different:
+
+- **Optimistic UI** shows the intended result before confirmation.
+- **Optimistic concurrency control** uses a version or compare-and-swap rule to reject writes based on stale data.
+
+This application fully simulates optimistic UI. It tracks versions and detects selected-draft conflicts, but `commitOperation` does not reject a stale base version. Therefore it is not a complete server-enforced optimistic concurrency-control system.
+
+### Version-based conflict detection
+
+When a remote simulation changes a task:
+
+1. the confirmed task version increments;
+2. the current clean form refreshes immediately; or
+3. a dirty form retains its draft and base snapshot;
+4. changed editable fields are recorded in `EditConflict`;
+5. saving opens a resolution UI.
+
+Resolution uses the incoming task as the new `before` snapshot so the submitted operation builds on the newest visible confirmed version.
+
+### Presence and advisory locks
+
+Presence entries state that a user is viewing or editing a task. Editing presence disables local controls for other users. This is a pessimistic user-experience hint, not a durable distributed lock:
+
+- it lives in one browser store;
+- it has no lease or expiry;
+- there is no server arbiter;
+- a malicious client could bypass it.
+
+A real implementation would use expiring presence over WebSocket or another realtime channel and enforce writes independently on the server.
+
+### Offline queue
+
+Offline actions still:
+
+- create a pending operation;
+- persist it;
+- add history;
+- update the query projection;
+- show immediately.
+
+They do not call the mutation until `NetworkStatus` observes reconnection. After reconnection, the provider reloads confirmed data, replays pending operations, resets offline deadlines, and starts inactive operations.
+
+This is eventual consistency: local visible state may temporarily differ from confirmed state, then converges after operations succeed or roll back.
+
+### CRDT-like description merge
+
+The merge is intentionally described as CRDT-like, not a complete text CRDT.
+
+Algorithm:
+
+1. split base, mine, and theirs into sentence-like blocks;
+2. return the changed side immediately when the other side equals base;
+3. retain base blocks only if both branches still contain them;
+4. collect branch additions absent from base;
+5. tag additions with actor and source index;
+6. deterministically sort by actor, position, then block text;
+7. deduplicate and append additions.
+
+The deterministic ordering gives the tested convergence property:
+
+```text
+merge(base, mine-by-You, theirs-by-Alex)
+=
+merge(base, mine-by-Alex, theirs-by-You)
+```
+
+Limitations:
+
+- sentence splitting is heuristic;
+- editing one sentence can look like delete-plus-add;
+- character-level intent and cursor positions are not preserved;
+- there are no stable operation IDs, vector clocks, tombstones, or replica protocol;
+- the user must review the result.
+
+### CRDT vocabulary
+
+| Term | Meaning here |
+| --- | --- |
+| Convergence | Equivalent branches produce the same merged output despite arrival order |
+| Observed remove | A base block removed by either branch is not retained |
+| Concurrent addition | A block present in a branch but absent from base |
+| Deterministic tie-break | Actor, source index, and text decide one stable order |
+| Replica | In a real CRDT, an independently updating participant; only simulated here |
+
+### Interview drill
+
+**Is this a real collaborative application?**
+It is a faithful browser-side simulation of collaboration workflows. It does not provide cross-client communication or server-enforced consistency.
+
+**Could full snapshots cause lost updates?**
+Yes. Replaying or committing a full local snapshot can overwrite a remote field that the user did not intend to change. Production code should use version preconditions plus field-level patches, or a suitable OT/CRDT design.
+
+**Why offer manual review after deterministic merge?**
+Convergence is not the same as preserving human meaning. The algorithm can be deterministic yet semantically awkward.
+
+## 41. Performance patterns beyond virtualization
+
+### Derive once per relevant change
+
+The board computes:
+
+- one compiled advanced predicate;
+- one filtered task array;
+- three sorted status arrays;
+- one pending ID set;
+- one presence map;
+- one lock map.
+
+Each derivation is memoized with the source values it depends on. This prevents every card from independently repeating whole-board searches.
+
+### Algorithmic shape
+
+For `n` tasks and `p` pending operations:
+
+- filtering is approximately O(n);
+- grouping uses three filters, approximately O(3n), which simplifies to O(n);
+- sorting is O(n log n) in aggregate;
+- pending reconciliation is currently O(p × n) because each full-snapshot operation scans or maps the task array;
+- mounted DOM is bounded by visible virtual rows plus overscan.
+
+The current scale is 1,000 tasks and a small pending list, so clarity wins. At much larger scale, normalize tasks into `Map<id, Task>` plus ordered ID lists and index operations by task ID.
+
+### Stable identities
+
+Stable task IDs serve several systems:
+
+- React list keys;
+- dnd-kit draggable identity;
+- virtualizer measurement keys;
+- pending-operation targets;
+- history targets;
+- presence targets;
+- selected task identity.
+
+Identity is an architectural primitive, not merely a React warning fix.
+
+### Avoiding unnecessary client code
+
+The Next.js server/client boundary keeps the route shell on the server, but most board modules belong in the client graph because they depend on hooks, events, context, or browser storage. Unused shadcn files do not enter the client bundle unless imported.
+
+## 42. Accessibility, headless UI, styling, and motion
+
+### Headless primitives
+
+Base UI supplies interaction behavior and ARIA semantics; the project-owned shadcn files supply styling and composition. This separation makes primitives customizable without rebuilding focus management, portals, escape handling, and keyboard interaction from scratch.
+
+### CVA and class composition
+
+Class Variance Authority models variant props:
+
+```ts
+const buttonVariants = cva("base classes", {
+  variants: {
+    variant: {
+      default: "default classes",
+      destructive: "destructive classes",
+    },
+  },
+})
+```
+
+`cn()` combines:
+
+1. `clsx` for conditional class expressions;
+2. `tailwind-merge` so later conflicting Tailwind utilities win predictably.
+
+### Tailwind semantic tokens
+
+Components use names such as:
+
+```text
+bg-background
+text-foreground
+text-muted-foreground
+border-border
+```
+
+These map to CSS custom properties in `globals.css`. Theme switching changes variable values rather than requiring every component to branch between light and dark classes.
+
+### Accessibility is a system
+
+The implementation combines:
+
+- native landmarks and headings;
+- labels and stable IDs;
+- keyboard drag sensor;
+- status-select alternative;
+- accessible modal primitives;
+- live drag announcements;
+- `aria-busy`, `aria-invalid`, and status text;
+- shortcut guards inside editable controls;
+- reduced-motion preference;
+- visible lock and pending feedback.
+
+An interview answer should connect each measure to a user need. Saying “we used an accessible library” is insufficient because application composition can still break accessibility.
+
+### Motion
+
+`LazyMotion` loads the smaller DOM animation feature set, while `MotionConfig reducedMotion="user"` follows the operating-system preference. Motion is limited to drag feedback rather than applied indiscriminately.
+
+## 43. Testing strategy and how to defend it
+
+### Testing pyramid
+
+Pure rules are tested with Vitest:
+
+- deterministic data and schema validity;
+- task filtering;
+- operation replay;
+- query AST editing, compilation, parsing, and precedence;
+- description merge convergence and deletion behavior.
+
+Cross-component browser flows are tested with Playwright:
+
+- hydration;
+- optimistic pending UI;
+- drag behavior;
+- developer simulation;
+- presence locking;
+- conflict merging;
+- offline queue and reconnect;
+- URL state and favorites;
+- keyboard shortcut UI.
+
+### Why not test everything through the browser
+
+Pure recursive and reconciliation algorithms are faster, clearer, and more exhaustive as unit tests. Browser tests are reserved for integration boundaries that depend on DOM behavior, focus, persistence, real event dispatch, or multiple features working together.
+
+### Query tests as semantic tests
+
+The strongest query tests compare the IDs produced by an encoded/decoded query with the IDs produced by the original tree. This verifies behavior, not just JSON shape.
+
+### CRDT-like tests as algebraic properties
+
+The arrival-order test verifies convergence by swapping branches and actors. This is more valuable than asserting only one hard-coded example because it targets the property the algorithm claims.
+
+### High-value missing tests
+
+If asked what you would add next:
+
+1. forced mutation failure preserves unrelated pending operations;
+2. reload resumes an operation exactly once;
+3. undo/redo failure restores the history cursor;
+4. same-column reorder and keyboard drag;
+5. conflict take-mine/take-theirs/non-description choices;
+6. a DOM-count assertion for the 1,000-task dataset;
+7. malformed URL and corrupted storage recovery;
+8. storage quota/denial feedback.
+
+## 44. Build and deployment concepts
+
+### Strict TypeScript
+
+`strict: true` enables the family of strict checks. `noEmit: true` means TypeScript validates but Next.js owns output generation. `moduleResolution: "bundler"` matches modern package exports and the Next.js toolchain.
+
+### ESLint
+
+The configuration composes Next.js Core Web Vitals and TypeScript rules. Lint catches framework-specific mistakes, unsafe hook dependencies, accessibility issues covered by rules, and general code-quality problems.
+
+### Standalone Next.js output
+
+`output: "standalone"` traces the minimal server runtime required by the application. The Docker runtime copies:
+
+- public assets;
+- `.next/standalone`;
+- `.next/static`.
+
+It does not copy the full development repository or complete `node_modules`.
+
+### Multi-stage Docker build
+
+The Dockerfile separates:
+
+1. dependency installation;
+2. application build;
+3. minimal production runtime.
+
+Benefits include layer reuse, smaller runtime images, fewer build tools in production, and a reduced attack surface. The runtime uses an unprivileged user and an HTTP health check.
+
+### Important deployment truth
+
+The container is stateless, but the application is not globally persistent. Data belongs to each browser's `localStorage`. Replacing or scaling containers does not share user tasks because the server never owns them.
+
+---
+
+# Part III: Interview drills
+
+## 45. Feature-by-feature question bank
+
+### Architecture and Next.js
+
+**1. Why use Next.js for a single-page client-heavy board?**
+It provides the App Router shell, server/client composition, metadata, optimized fonts, error conventions, build tooling, static prerendering, and a deployable standalone server. The board could be built with Vite, but Next.js demonstrates production routing and rendering conventions.
+
+**2. Why is `app/page.tsx` still a Server Component if it only renders a client board?**
+Server Components are the default and there is no reason to move the route entry itself to the client. It preserves the framework boundary and keeps the option to add server-rendered content later.
+
+**3. What causes hydration mismatches, and how does this app avoid them?**
+They occur when the first client render differs from server HTML. Deterministic seed data, browser guards, delayed persisted-state recovery, and theme-specific suppression on the root keep the initial trees aligned.
+
+**4. What does `"use client"` do?**
+It marks a client module entry point. That module and its imported client graph can use browser interactivity and are included in the client bundle. It does not mean the component skips server prerendering.
+
+### State and mutations
+
+**5. Walk through task creation.**
+The dialog owns a controlled draft, validates required fields, creates IDs/timestamps/initial position, and calls `execute`. `execute` persists a pending operation and history entry, projects it into the query cache, and starts or queues the mutation. Success commits and reconciles; failure removes the operation/history and rebuilds from confirmed data.
+
+**6. Why is rollback based on replay rather than an old snapshot?**
+An old snapshot can erase newer remote changes or unrelated optimistic operations. Replay starts from the latest confirmed database and applies only operations still pending.
+
+**7. What happens if two pending updates target the same task?**
+They replay in array order, so the later full snapshot wins visually. Confirmation order and full-snapshot commits can still produce lost-field problems; production code needs sequencing, version preconditions, and patches.
+
+**8. What survives a reload?**
+Confirmed tasks, the persisted query cache, selected Zustand workflow state, pending operations, history, drafts, conflicts, filters, and simulation settings. Runtime-only active-operation markers and transient dialog state do not.
+
+**9. Why use a module-level `Set` for active operations?**
+It prevents repeated effects in one JavaScript runtime from starting the same persisted operation twice. It is intentionally not durable; the persisted pending list is the recovery source after a full reload.
+
+**10. How would the simulated repository become a real API?**
+Replace repository reads/commits with HTTP calls, keep query keys and most UI commands, move validation and authorization to the server, send version preconditions and patches, use durable server IDs, and add realtime invalidation/presence.
+
+### Virtualization and performance
+
+**11. Explain TanStack Virtual without library vocabulary.**
+The scrollbar represents the full list, but the DOM contains only the visible slice plus a buffer. Rows are measured and translated to their logical offsets inside a full-height spacer.
+
+**12. Why is the scroll element passed as a function?**
+The DOM ref is `null` during rendering and assigned after mount. The virtualizer calls the function when it needs the current element.
+
+**13. What does `measureElement` solve?**
+Cards have variable height. It records real sizes so later row offsets and total scroll height are accurate.
+
+**14. How would you prove virtualization is effective?**
+Load 1,000 tasks, inspect or test the mounted card count, profile commit/layout time, and compare scrolling behavior and memory against a nonvirtual baseline.
+
+**15. Is `useMemo` enough to make 1,000 cards fast?**
+No. Memoization can reduce recalculation and re-rendering but still leaves 1,000 DOM subtrees. Virtualization changes the structural amount of mounted UI.
+
+### Drag-and-drop and ordering
+
+**16. Why fractional positions instead of array indexes?**
+A move updates one task rather than renumbering all following tasks. Sorting by `position` reconstructs order.
+
+**17. What can go wrong with fractional positions?**
+Repeated midpoint insertions shrink gaps until numeric precision or readability becomes problematic. Normalize ranks periodically or use a production ranking algorithm.
+
+**18. Why disable overlay drop animation?**
+The optimistic move updates the destination immediately. A default overlay animation can target stale source geometry and visually fly backward.
+
+**19. How is drag accessible?**
+Keyboard sensors and announcements support keyboard/screen-reader interaction, while the status select provides a simpler non-drag alternative.
+
+### Query builder and URL state
+
+**20. Why is the query model recursive?**
+Nested boolean groups are naturally recursive: a group contains conditions or more groups. The UI, immutable editor, compiler, serializer, parser, and description function mirror that structure.
+
+**21. How is boolean precedence handled?**
+Compilation groups adjacent AND predicates into clauses separated by OR and evaluates `some(every(...))`. The URL parser's grammar consumes AND expressions inside OR expressions.
+
+**22. How are malformed shared URLs handled?**
+Fields and operators are validated, grammar failures return `null`, legacy payloads pass through Zod, and an invalid legacy `q` parameter is removed instead of crashing the route.
+
+**23. Why use `replaceState` rather than router navigation?**
+Filters operate entirely on an already-loaded client list. `replaceState` updates the shareable URL without a server navigation or a history entry for every keystroke.
+
+### Collaboration and offline behavior
+
+**24. How is a conflict detected?**
+A remote update targets the selected task while its persisted local draft is dirty and has a base snapshot. The app compares editable fields, stores the newest incoming task, and accumulates changed fields.
+
+**25. Is the version field enforcing concurrency?**
+No. It communicates ordering and supports conflict UX, but commit does not perform compare-and-swap validation. This distinction is important.
+
+**26. What makes the description merge convergent?**
+Concurrent additions are ordered by stable actor identity, source index, and text, independent of which branch is passed as mine or theirs.
+
+**27. Why call it CRDT-like instead of a CRDT?**
+It demonstrates deterministic convergence and observed-remove behavior over blocks, but lacks a replicated-operation model, stable element IDs, causal metadata, and a transport protocol.
+
+**28. What if the tab closes while offline?**
+The confirmed repository and pending operation log remain in storage. On the next load, hydration restores the operations; once connected, the provider reprojects and resumes them.
+
+**29. Are editing locks safe?**
+They are useful advisory UX in this simulation. Only a server-authorized write rule can be a correctness or security boundary.
+
+### React, TypeScript, UI, and tests
+
+**30. Why controlled forms?**
+They make draft state explicit and reusable, enable persisted edits and conflicts, and allow validation and reset without reading values imperatively from the DOM.
+
+**31. Why Zod if TypeScript already defines `Task`?**
+TypeScript cannot validate runtime JSON. Zod checks storage and URL data; `z.infer` then supplies the compile-time type from the same schema.
+
+**32. Why use Base UI/shadcn primitives?**
+They provide tested interaction and accessibility behavior with project-owned styling. The tradeoff is another abstraction layer whose APIs and generated code the team must understand.
+
+**33. Why unit-test query and merge logic separately?**
+They are pure algorithms with important semantic properties. Unit tests provide precise, fast coverage; Playwright then verifies their integration through actual UI flows.
+
+**34. What would you monitor in production?**
+Mutation success/failure/latency, pending-queue age, conflict rate, storage/API errors, query/cache errors, client exceptions, interaction latency, mounted DOM count, and reconnect/resume behavior.
+
+**35. What is the most important current limitation?**
+There is no authoritative multi-user backend. Full snapshots plus client-only locks mean collaboration correctness is demonstrated, not guaranteed.
+
+## 46. Whiteboard traces to practice
+
+Practice drawing each flow from memory in under two minutes.
+
+### Create, confirm, or roll back
+
+```text
+TaskForm
+→ execute(before=null, after=task)
+→ pending + history + event
+→ confirmed + pending replay
+→ query cache renders card
+→ wait/reconnect
+→ success: commit/version/reconcile
+   or
+→ failure: remove op/history/reconcile/toast
+```
+
+### Drag to another column
+
+```text
+Pointer/keyboard sensor
+→ active task ID
+→ collision target ID
+→ destination task or column
+→ fractional position
+→ execute full task snapshot
+→ optimistic projection
+```
+
+### Advanced query
+
+```text
+recursive editor
+→ immutable AST update
+→ Zustand advancedQuery
+→ URL rule/logic serialization
+→ memoized predicate compiler
+→ quick + advanced filtering
+→ grouped virtual columns
+```
+
+### Offline operation
+
+```text
+browser/forced offline
+→ execute persists waitForConnection operation
+→ optimistic projection remains visible
+→ reconnect event
+→ reload confirmed data
+→ replay all pending
+→ reset offline deadline
+→ start inactive mutation once
+```
+
+### Conflict
+
+```text
+dirty draft + base snapshot
+→ remote confirmed update/version increment
+→ changed fields + incoming task
+→ warning
+→ take theirs
+   or keep mine
+   or deterministic description proposal + manual review
+→ one optimistic resolve operation
+```
+
+## 47. Honest tradeoffs and production redesign
+
+When an interviewer challenges the design, do not defend every choice as universally optimal. State the assignment constraint, current benefit, limitation, and production evolution.
+
+| Current choice | Why it fits here | Production evolution |
+| --- | --- | --- |
+| `localStorage` repository | Self-contained deterministic demo | Authenticated API and transactional database |
+| Full task snapshots | Simple replay, history, and rollback | Field patches plus version preconditions |
+| Browser presence | Reproducible UI demonstration | Realtime service with leases/heartbeats |
+| CRDT-like sentence merge | Teaches convergence with readable output | Mature text CRDT/OT library if collaborative text requires it |
+| Floating positions | O(1) single-card rank update | Rank normalization or distributed ordering keys |
+| One tasks query | Simple at 1,000 local tasks | Pagination/streaming, normalized cache, server filtering |
+| Persisted edit draft | Survives reload and enables conflicts | Per-user server drafts or bounded local recovery policy |
+| Random simulated failures | Exercises rollback paths | Real error taxonomy, retry policy, telemetry, idempotency keys |
+
+### Senior follow-up: idempotency
+
+A durable offline queue can resend work after uncertain failure. A real API should accept a client-generated operation ID as an idempotency key and return the original result for duplicate submissions. The current browser repository uses one runtime `Set`, which prevents local duplicate starts but is not a server idempotency guarantee.
+
+### Senior follow-up: ordering and races
+
+Multiple operations currently use independent mutation calls and full snapshots. Production choices include:
+
+- serialize operations per task;
+- include expected versions and reject conflicts;
+- send field patches;
+- make server responses authoritative;
+- cancel or supersede obsolete queued operations;
+- use idempotency keys;
+- invalidate or merge query data after server acknowledgement.
+
+### Senior follow-up: storage migrations
+
+The keys and payloads are versioned, but corrupt confirmed task data currently resets. A mature client would define explicit migrations, preserve an export/recovery path, handle quota denial, and monitor migration failures.
+
+## 48. Final mastery checklist
+
+You are interview-ready when you can do all of the following without reading the code:
+
+- give the 30-second and 90-second architecture summaries;
+- draw confirmed, pending, projected, and draft task state;
+- trace success, failure, offline, reload, undo, and conflict flows;
+- explain `useVirtualizer` option by option and draw its spacer layout;
+- trace dnd-kit sensors, droppable/sortable hooks, collision, overlay, and position calculation;
+- draw the query AST and explain recursive immutable editing;
+- explain why the compiler implements OR-of-ANDs;
+- explain URL precedence and the microtask readiness gate;
+- distinguish optimistic UI from optimistic concurrency control;
+- explain why the description merge is CRDT-like rather than a complete CRDT;
+- explain Server Components, client boundaries, prerendering, and hydration;
+- compare local state, Zustand, TanStack Query, storage, and URL ownership;
+- explain the main TypeScript utility types and Zod inference used here;
+- name accessibility alternatives to drag-and-drop;
+- identify current test coverage and the highest-value gaps;
+- state the application's production limitations honestly and propose concrete upgrades.

@@ -11,6 +11,12 @@ npm run dev
 
 Then open [http://localhost:3000](http://localhost:3000).
 
+## Documentation
+
+- Open the interactive [Board Systems Lab](http://localhost:3000/interview-guide) inside the running application for guided lessons, code examples, system-flow labs, and interview drills.
+- [`docs/APPLICATION_IMPLEMENTATION.md`](docs/APPLICATION_IMPLEMENTATION.md) is the comprehensive feature, architecture, syntax, patterns, tradeoffs, and interview-drill guide.
+- [`docs/INTERVIEW_CHEAT_SHEET.md`](docs/INTERVIEW_CHEAT_SHEET.md) is the condensed last-minute revision sheet.
+
 ## Docker and Dokploy
 
 The production image uses Next.js standalone output and runs as the non-root `nextjs` user:
