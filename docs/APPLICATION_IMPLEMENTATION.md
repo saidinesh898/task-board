@@ -907,7 +907,7 @@ The pure reconciliation and query logic have strong focused tests, while several
 
 ```text
 npm run dev       Next.js development server
-npm run build     Optimized Next.js production build and TypeScript validation
+npm run build     Static production export to dist and TypeScript validation
 npm run start     Start the production Next.js server
 npm run lint      ESLint
 npm test          Vitest once
@@ -929,7 +929,13 @@ Verified current results:
 
 ## 26. Deployment implementation
 
-`next.config.ts` uses `output: "standalone"`. Next.js therefore emits a traced minimal Node server and only required runtime dependencies under `.next/standalone`.
+`next.config.ts` deliberately supports two production targets:
+
+- the default `npm run build` uses `output: "export"` and `distDir: "dist"` to create a portable static site for Sites;
+- Docker and Nixpacks set `TASK_BOARD_BUILD_TARGET=standalone`, selecting `output: "standalone"` and the normal `.next` directory. Next.js then emits a traced minimal Node server and only required runtime dependencies under `.next/standalone`.
+
+This application can be exported because its routes are statically renderable and
+all mutable data, persistence, and simulated collaboration run in the browser.
 
 ### Dockerfile
 
@@ -937,7 +943,7 @@ The multi-stage image uses Node 22 Alpine:
 
 1. `base` disables telemetry and sets `/app`.
 2. `dependencies` installs `libc6-compat`, copies lock files, and runs `npm ci`.
-3. `builder` copies dependencies and source, then runs the production build.
+3. `builder` copies dependencies and source, then runs the production build with `TASK_BOARD_BUILD_TARGET=standalone`.
 4. `runner` creates an unprivileged `nextjs` user and group.
 5. Only `public`, `.next/standalone`, and `.next/static` are copied into the runtime image.
 6. Environment config binds to `0.0.0.0:3000` in production.
@@ -949,7 +955,7 @@ The multi-stage image uses Node 22 Alpine:
 
 ### Nixpacks fallback
 
-`nixpacks.toml` explicitly selects Node 22, runs `npm ci`, builds with `npm run build`, and starts with `npm run start`. It exists because Dokploy may default to Nixpacks if Dockerfile mode is not selected.
+`nixpacks.toml` explicitly selects Node 22, runs `npm ci`, builds with `TASK_BOARD_BUILD_TARGET=standalone npm run build`, and starts with `npm run start`. It exists because Dokploy may default to Nixpacks if Dockerfile mode is not selected.
 
 No persistent server volume is required or useful: all application state is per-browser `localStorage`. Deploying a new container does not move one browser's data to another browser and cannot provide shared multi-user collaboration.
 
@@ -1057,7 +1063,7 @@ No persistent server volume is required or useful: all application state is per-
 | `eslint.config.mjs` | Next core-web-vitals and TypeScript lint configuration |
 | `tsconfig.json` | Strict TypeScript and `@/` alias configuration |
 | `postcss.config.mjs` | Tailwind CSS 4 PostCSS plugin |
-| `next.config.ts` | Standalone production output |
+| `next.config.ts` | Static Sites export plus conditional standalone container output |
 | `components.json` | shadcn style, aliases, CSS, and icon configuration |
 | `package.json` / `package-lock.json` | Node constraint, scripts, exact dependency graph |
 

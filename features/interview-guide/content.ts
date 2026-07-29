@@ -944,12 +944,12 @@ const pendingIds = useMemo(
     shortTitle: "Ship & scale",
     eyebrow: "Close strongly",
     summary:
-      "Defend the test split, describe standalone Docker output, identify honest limitations, and propose a credible real-world evolution.",
+      "Defend the test split, describe the static and standalone deployment targets, identify honest limitations, and propose a credible real-world evolution.",
     minutes: 18,
     accent: "rose",
     outcomes: [
       "Choose unit versus browser tests based on the behavior boundary.",
-      "Explain the multi-stage standalone Docker build.",
+      "Explain the static Sites export and multi-stage standalone Docker build.",
       "Turn every current limitation into a concrete production change.",
     ],
     concepts: [
@@ -959,9 +959,9 @@ const pendingIds = useMemo(
           "Pure query, replay, validation, and merge logic belongs in fast unit tests. Hydration, DnD, persistence, focus, and multi-feature journeys belong in Playwright.",
       },
       {
-        title: "Minimal runtime",
+        title: "Two intentional outputs",
         body:
-          "Next.js standalone output traces the server dependencies. A multi-stage Dockerfile installs, builds, then copies only public, standalone, and static output into a non-root runtime.",
+          "The default build creates a portable static export in dist for Sites. Docker and Nixpacks set TASK_BOARD_BUILD_TARGET=standalone, making Next.js trace the server dependencies for a minimal non-root Node runtime.",
       },
       {
         title: "Constraint → evolution",
@@ -987,11 +987,15 @@ const second = mergeDescription({
 expect(first).toBe(second)`,
       },
       {
-        label: "Standalone build",
+        label: "Deployment targets",
         file: "next.config.ts",
         language: "ts",
-        code: `const nextConfig: NextConfig = {
-  output: "standalone",
+        code: `const isStandaloneBuild =
+  process.env.TASK_BOARD_BUILD_TARGET === "standalone"
+
+const nextConfig: NextConfig = {
+  output: isStandaloneBuild ? "standalone" : "export",
+  distDir: isStandaloneBuild ? ".next" : "dist",
 }
 
 export default nextConfig`,
@@ -1000,8 +1004,8 @@ export default nextConfig`,
     mentalModel: [
       "Pure rule → unit test",
       "Browser boundary → E2E test",
-      "Build stage → compile and trace",
-      "Runtime stage → minimal non-root image",
+      "Default build → portable static dist",
+      "Container build → traced non-root runtime",
       "Client simulation → real API/realtime evolution",
     ],
     pitfalls: [

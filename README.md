@@ -19,7 +19,8 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Docker and Dokploy
 
-The production image uses Next.js standalone output and runs as the non-root `nextjs` user:
+The Docker and Nixpacks production paths set `TASK_BOARD_BUILD_TARGET=standalone`,
+which selects Next.js standalone output and runs as the non-root `nextjs` user:
 
 ```bash
 docker build -t task-board .
@@ -45,6 +46,10 @@ npm test
 npm run lint
 npm run build
 ```
+
+The default build is a portable static export in `dist/` for the hosted
+interview lab. Docker and Nixpacks select the standalone server target during
+their build, so both deployment forms are generated from the same application.
 
 ## Architecture
 
