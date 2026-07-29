@@ -47,9 +47,9 @@ npm run lint
 npm run build
 ```
 
-The default build is a portable static export in `dist/` for the hosted
-interview lab. Docker and Nixpacks select the standalone server target during
-their build, so both deployment forms are generated from the same application.
+The default build uses Vinext to create the host-compatible Vite/RSC server
+bundle in `dist/`. Docker and Nixpacks run `npm run build:next` with the
+standalone target, so the existing traced Next.js container remains available.
 
 ## Architecture
 

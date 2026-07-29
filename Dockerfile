@@ -12,7 +12,7 @@ RUN npm ci
 FROM base AS builder
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN TASK_BOARD_BUILD_TARGET=standalone npm run build
+RUN TASK_BOARD_BUILD_TARGET=standalone npm run build:next
 
 FROM node:22-alpine AS runner
 WORKDIR /app

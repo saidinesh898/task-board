@@ -4,10 +4,9 @@ const isStandaloneBuild =
   process.env.TASK_BOARD_BUILD_TARGET === "standalone";
 
 const nextConfig: NextConfig = {
-  // Sites receives a portable static export in dist/. Docker and Nixpacks set
-  // TASK_BOARD_BUILD_TARGET=standalone to retain the traced Node.js runtime.
-  output: isStandaloneBuild ? "standalone" : "export",
-  distDir: isStandaloneBuild ? ".next" : "dist",
+  // Vinext supplies the Sites server bundle. Docker and Nixpacks set this
+  // target to retain Next.js' traced standalone Node.js runtime.
+  ...(isStandaloneBuild ? { output: "standalone" as const } : {}),
 };
 
 export default nextConfig;
