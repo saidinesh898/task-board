@@ -1,0 +1,17 @@
+.style1 {
+  position: relative;
+}
+.style2 {
+  width: calc(var(--spacing, 0.25rem) * 4);
+  height: calc(var(--spacing, 0.25rem) * 4);
+}
+.style3 {
+  width: calc(var(--spacing, 0.25rem) * 4);
+  height: calc(var(--spacing, 0.25rem) * 4);
+  animation: var(--animate-spin, spin 1s linear infinite);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

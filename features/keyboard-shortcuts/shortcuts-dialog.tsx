@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { useBoardStore } from "@/stores/board-store"
+import styles from "./shortcuts-dialog.module.css"
 
 const groups = [
   ["General", [["?", "Open keyboard shortcuts"], ["/", "Focus task search"], ["N", "Create a task"], ["Esc", "Close or cancel"]]],
@@ -29,7 +30,7 @@ export function ShortcutsDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className={styles.style1}>
         <DialogHeader>
           <DialogTitle>Keyboard shortcuts</DialogTitle>
           <DialogDescription>Move quickly without leaving the board.</DialogDescription>
@@ -43,13 +44,13 @@ export function ShortcutsDialog() {
 
 function ShortcutGroup({ title, rows }: { title: string; rows: readonly (readonly [string, string])[] }) {
   return (
-    <section className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
-      <div className="divide-y rounded-xl border bg-card">
+    <section className={styles.style2}>
+      <h3 className={styles.style3}>{title}</h3>
+      <div className={styles.style4}>
         {rows.map(([keys, description]) => (
-          <div key={`${keys}-${description}`} className="flex items-center justify-between gap-4 px-3 py-2.5">
-            <span className="text-sm">{description}</span>
-            <Badge variant="secondary" className="shrink-0 font-mono">{keys}</Badge>
+          <div key={`${keys}-${description}`} className={styles.style5}>
+            <span className={styles.style6}>{description}</span>
+            <Badge variant="secondary" className={styles.style7}>{keys}</Badge>
           </div>
         ))}
       </div>

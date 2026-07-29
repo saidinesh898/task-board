@@ -56,6 +56,21 @@ test("does not animate a dropped task back to its previous column", async ({ pag
   await expect(destination.getByRole("heading", { name: title })).toBeVisible()
 })
 
+test("moves a task between columns with the keyboard sensor", async ({ page }) => {
+  const title = "Implement authentication"
+  const source = page.getByRole("heading", { name: "Todo" }).locator("xpath=ancestor::section")
+  const destination = page.getByRole("heading", { name: "In Progress" }).locator("xpath=ancestor::section")
+  const handle = source.getByRole("button", { name: `Drag ${title}` })
+
+  await handle.focus()
+  await page.keyboard.press("Space")
+  await page.keyboard.press("ArrowRight")
+  await page.keyboard.press("Space")
+
+  await expect(source.getByRole("button", { name: `Drag ${title}` })).toHaveCount(0)
+  await expect(destination.getByRole("button", { name: `Drag ${title}` })).toHaveCount(2)
+})
+
 test("developer tools are the source of remote activity", async ({ page }) => {
   await page.getByText("DEV TOOLS", { exact: true }).click()
   await expect(page.getByText("Emulation", { exact: true })).toBeVisible()

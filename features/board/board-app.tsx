@@ -1,9 +1,8 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
-import * as m from "motion/react-m"
+import { useCallback, useMemo } from "react"
+import { DragDropProvider, DragOverlay, type DragEndEvent, type DragOverEvent, type DragStartEvent } from "@dnd-kit/react"
+import { Accessibility, Feedback, PointerActivationConstraints, PointerSensor } from "@dnd-kit/dom"
 import { useTheme } from "next-themes"
 import { BookOpenCheck, Keyboard, Laptop, Mail, Moon, Plus, Redo2, Sun, Undo2, Zap } from "lucide-react"
 import Link from "next/link"
@@ -21,13 +20,14 @@ import { ShortcutsDialog } from "@/features/keyboard-shortcuts/shortcuts-dialog"
 import { useKeyboardShortcuts } from "@/features/keyboard-shortcuts/use-keyboard-shortcuts"
 import { BoardFilters } from "./board-filters"
 import { TaskColumn } from "./task-column"
-import { TaskCard } from "./task-card"
+import { TaskDragPreview } from "./task-card"
 import { CreateTaskDialog } from "./create-task-dialog"
 import { TaskDetailsSheet } from "./task-details-sheet"
 import { filterTasks } from "@/features/tasks/selectors"
 import { compileTaskQuery } from "@/features/query-builder/query-engine"
 import { useQueryUrlSync } from "@/features/query-builder/use-query-url-sync"
 import { NetworkStatus } from "@/features/collaboration/network-status"
+import styles from "./board-app.module.css"
 
 export function BoardApp() { return <TaskOperationsProvider><BoardExperience /></TaskOperationsProvider> }
 
@@ -44,8 +44,6 @@ function BoardExperience() {
   const activeUser = useBoardStore((state) => state.activeUser)
   const setCreateOpen = useBoardStore((state) => state.setCreateOpen)
   const setShortcutsOpen = useBoardStore((state) => state.setShortcutsOpen)
-  const [activeTask, setActiveTask] = useState<Task | null>(null)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))
   useKeyboardShortcuts({ undo, redo })
   useQueryUrlSync()
 
@@ -82,27 +80,57 @@ function BoardExperience() {
     execute(task, { ...task, status, position }, status === task.status ? `Reorder “${task.title}”` : `Move “${task.title}” to ${status}`, { kind: "update" })
   }, [execute, lockedByTask, tasks])
   const onDragEnd = (event: DragEndEvent) => {
-    setActiveTask(null)
-    if (!event.over) return
-    const task = tasks.find((item) => item.id === event.active.id)
+    if (event.canceled) return
+    const { source, target } = event.operation
+    if (!source || !target) return
+    const task = tasks.find((item) => item.id === source.id)
     if (!task) return
-    const overTask = tasks.find((item) => item.id === event.over!.id)
-    const status = (overTask?.status ?? String(event.over.id).replace("column-", "")) as TaskStatus
+    const overTask = tasks.find((item) => item.id === target.id)
+    const status = (overTask?.status ?? target.data.status ?? String(target.id).replace("column-", "")) as TaskStatus
     if (STATUSES.includes(status)) moveTask(task, status, overTask)
   }
-  const onDragStart = (event: DragStartEvent) => setActiveTask(tasks.find((task) => task.id === event.active.id) ?? null)
 
-  return <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,var(--color-muted),transparent_35%)]">
+  return <div className={styles.style1}>
     <AppHeader undo={undo} redo={redo} undoLabel={past.at(-1)?.label} redoLabel={future.at(-1)?.label} onCreate={() => setCreateOpen(true)} onShortcuts={() => setShortcutsOpen(true)} />
     <NetworkStatus />
     <DeveloperTools />
-    <main className="mx-auto max-w-[1600px] space-y-4 px-4 py-5 sm:px-6">
-      <div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Thomson Reuters Board</h1><p className="mt-1 text-sm text-muted-foreground">Optimistic, collaborative, and designed to stay fast at 1,000+ tasks.</p></div>
+    <main className={styles.style2}>
+      <div><h1 className={styles.style3}>Thomson Reuters Board</h1><p className={styles.style4}>Optimistic, collaborative, and designed to stay fast at 1,000+ tasks.</p></div>
       <BoardFilters resultCount={filtered.length} totalCount={tasks.length} />
-      {isLoading ? <LoadingBoard /> : <DndContext id="task-board-dnd" sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveTask(null)} accessibility={{ announcements: { onDragStart: ({ active }) => `Picked up ${tasks.find((task) => task.id === active.id)?.title}`, onDragOver: ({ over }) => over ? `Over ${over.id}` : undefined, onDragEnd: () => "Task dropped", onDragCancel: () => "Drag cancelled" } }}>
-        <div className="flex snap-x gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-3 lg:overflow-visible">{STATUSES.map((status) => <div key={status} className="snap-center"><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} presenceByTask={presenceByTask} lockedByTask={lockedByTask} /></div>)}</div>
-        <DragOverlay dropAnimation={null}>{activeTask && <m.div initial={{ scale: .98, opacity: .7 }} animate={{ scale: 1.02, opacity: 1 }} className="w-[360px] rotate-1 shadow-2xl"><TaskCard task={activeTask} pending={pendingIds.has(activeTask.id)} onStatusChange={moveTask} presence={presenceByTask.get(activeTask.id)} lockedBy={lockedByTask.get(activeTask.id)} /></m.div>}</DragOverlay>
-      </DndContext>}
+      {isLoading ? <LoadingBoard /> : <DragDropProvider
+        sensors={(defaults) => [
+          ...defaults.filter((sensor) => sensor !== PointerSensor),
+          PointerSensor.configure({
+            activationConstraints: [
+              new PointerActivationConstraints.Distance({ value: 6 }),
+            ],
+          }),
+        ]}
+        plugins={(defaults) => defaults.map((plugin) => {
+          if (plugin === Accessibility) {
+            return Accessibility.configure({
+              id: "task-board-dnd",
+              announcements: {
+                dragstart: ({ operation }: DragStartEvent) => `Picked up ${(operation.source?.data.task as Task | undefined)?.title ?? "task"}`,
+                dragover: ({ operation }: DragOverEvent) => operation.target ? `Over ${operation.target.id}` : undefined,
+                dragend: ({ canceled }: DragEndEvent) => canceled ? "Drag cancelled" : "Task dropped",
+              },
+            })
+          }
+          return plugin === Feedback ? Feedback.configure({ dropAnimation: { duration: 0 } }) : plugin
+        })}
+        onDragStart={(_event, manager) => {
+          const feedback = manager.plugins.find((plugin) => plugin instanceof Feedback)
+          if (feedback) feedback.dropAnimation = { duration: 0 }
+        }}
+        onDragEnd={onDragEnd}
+      >
+        <div className={styles.style5}>{STATUSES.map((status) => <div key={status} className={styles.style6}><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} presenceByTask={presenceByTask} lockedByTask={lockedByTask} /></div>)}</div>
+        <DragOverlay dropAnimation={null}>{(source) => {
+          const task = source.data.task as Task | undefined
+          return task ? <div className={styles.style7}><TaskDragPreview task={task} pending={pendingIds.has(task.id)} /></div> : null
+        }}</DragOverlay>
+      </DragDropProvider>}
     </main>
     <AppFooter />
     <CreateTaskDialog /><TaskDetailsSheet /><ShortcutsDialog />
@@ -111,11 +139,11 @@ function BoardExperience() {
 
 function AppHeader({ undo, redo, undoLabel, redoLabel, onCreate, onShortcuts }: { undo: () => void; redo: () => void; undoLabel?: string; redoLabel?: string; onCreate: () => void; onShortcuts: () => void }) {
   const { setTheme } = useTheme()
-  return <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-[1600px] items-center gap-2 px-4 sm:px-6"><div className="mr-auto flex items-center gap-2"><div className="grid size-8 place-items-center rounded-xl bg-primary text-primary-foreground"><Zap className="size-4" fill="currentColor" /></div><span className="hidden font-semibold sm:block">Thomson Reuters Board</span></div>
+  return <header className={styles.style8}><div className={styles.style9}><div className={styles.style10}><div className={styles.style11}><Zap className={styles.style12} fill="currentColor" /></div><span className={styles.style13}>Thomson Reuters Board</span></div>
     <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" disabled={!undoLabel} onClick={undo} aria-label={undoLabel ? `Undo ${undoLabel}` : "Nothing to undo"} />}><Undo2 /></TooltipTrigger><TooltipContent>{undoLabel ? `Undo: ${undoLabel}` : "Nothing to undo"}</TooltipContent></Tooltip>
     <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" disabled={!redoLabel} onClick={redo} aria-label={redoLabel ? `Redo ${redoLabel}` : "Nothing to redo"} />}><Redo2 /></TooltipTrigger><TooltipContent>{redoLabel ? `Redo: ${redoLabel}` : "Nothing to redo"}</TooltipContent></Tooltip>
-    <Button variant="outline" onClick={onShortcuts} aria-label="Keyboard Shortcuts"><Keyboard /><span className="hidden sm:inline">Keyboard Shortcuts</span><span className="hidden rounded border px-1 font-mono text-[10px] text-muted-foreground md:inline">?</span></Button>
-    <Button variant="outline" nativeButton={false} render={<Link href="/interview-guide" />} aria-label="Open interview guide"><BookOpenCheck /><span className="hidden lg:inline">Interview guide</span></Button>
+    <Button variant="outline" onClick={onShortcuts} aria-label="Keyboard Shortcuts"><Keyboard /><span className={styles.style14}>Keyboard Shortcuts</span><span className={styles.style15}>?</span></Button>
+    <Button variant="outline" nativeButton={false} render={<Link href="/interview-guide" />} aria-label="Open interview guide"><BookOpenCheck /><span className={styles.style16}>Interview guide</span></Button>
     <DropdownMenu>
       <Tooltip><TooltipTrigger render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Choose theme" />} />}><Moon /></TooltipTrigger><TooltipContent>Choose theme</TooltipContent></Tooltip>
       <DropdownMenuContent align="end">
@@ -124,21 +152,21 @@ function AppHeader({ undo, redo, undoLabel, redoLabel, onCreate, onShortcuts }: 
         <DropdownMenuItem onClick={() => setTheme("system")}><Laptop />System</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-    <Button onClick={onCreate}><Plus /><span className="hidden sm:inline">New task</span><span className="hidden rounded border border-primary-foreground/30 px-1 font-mono text-[10px] md:inline">N</span></Button>
+    <Button onClick={onCreate}><Plus /><span className={styles.style14}>New task</span><span className={styles.style17}>N</span></Button>
   </div></header>
 }
 
 function AppFooter() {
-  return <footer className="border-t bg-background/80">
-    <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-      <p className="font-medium text-foreground">Sai Dinesh</p>
-      <nav aria-label="Owner contact links" className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground" href="mailto:sai_dinesh@epam.com"><Mail className="size-4" />sai_dinesh@epam.com</a>
-        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground" href="https://github.com/saidinesh898/task-board" target="_blank" rel="noreferrer"><FaGithub className="size-4" aria-hidden="true" />GitHub</a>
-        <a className="inline-flex items-center gap-1.5 transition-colors hover:text-[#0a66c2]" href="https://www.linkedin.com/in/saidineshkumar/" target="_blank" rel="noreferrer"><FaLinkedin className="size-4" aria-hidden="true" />LinkedIn</a>
+  return <footer className={styles.style18}>
+    <div className={styles.style19}>
+      <p className={styles.style20}>Sai Dinesh</p>
+      <nav aria-label="Owner contact links" className={styles.style21}>
+        <a className={styles.style22} href="mailto:sai_dinesh@epam.com"><Mail className={styles.style12} />sai_dinesh@epam.com</a>
+        <a className={styles.style22} href="https://github.com/saidinesh898/task-board" target="_blank" rel="noreferrer"><FaGithub className={styles.style12} aria-hidden="true" />GitHub</a>
+        <a className={styles.style23} href="https://www.linkedin.com/in/saidineshkumar/" target="_blank" rel="noreferrer"><FaLinkedin className={styles.style12} aria-hidden="true" />LinkedIn</a>
       </nav>
     </div>
   </footer>
 }
 
-function LoadingBoard() { return <div className="grid gap-4 lg:grid-cols-3">{STATUSES.map((status) => <div key={status} className="space-y-3 rounded-2xl border p-4"><Skeleton className="h-8 w-32" />{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-40 w-full" />)}</div>)}</div> }
+function LoadingBoard() { return <div className={styles.style24}>{STATUSES.map((status) => <div key={status} className={styles.style25}><Skeleton className={styles.style26} />{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className={styles.style27} />)}</div>)}</div> }

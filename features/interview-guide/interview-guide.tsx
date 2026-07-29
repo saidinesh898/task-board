@@ -42,6 +42,7 @@ import {
   type InterviewQuestion,
   type Lesson,
 } from "./content"
+import styles from "./interview-guide.module.css"
 
 type View = "learn" | "flows" | "drill"
 type Confidence = 0 | 1 | 2
@@ -140,18 +141,18 @@ export function InterviewGuide() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fb] text-slate-950 dark:bg-[#080a0f] dark:text-slate-100">
+    <div className={styles.style1}>
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 opacity-70 [background-image:radial-gradient(circle_at_12%_8%,rgba(124,58,237,.12),transparent_26%),radial-gradient(circle_at_86%_18%,rgba(6,182,212,.10),transparent_24%),linear-gradient(rgba(15,23,42,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.025)_1px,transparent_1px)] [background-size:auto,auto,32px_32px,32px_32px] dark:opacity-90 dark:[background-image:radial-gradient(circle_at_12%_8%,rgba(124,58,237,.16),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(6,182,212,.10),transparent_26%),linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)]"
+        className={styles.style2}
       />
 
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-[#080a0f]/85">
-        <div className="mx-auto flex h-16 max-w-[1720px] items-center gap-3 px-4 sm:px-6">
+      <header className={styles.style3}>
+        <div className={styles.style4}>
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className={styles.style5}
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Open study navigation"
           >
@@ -163,16 +164,16 @@ export function InterviewGuide() {
               setView("learn")
               setSelectedLessonId(null)
             }}
-            className="flex min-w-0 items-center gap-2.5"
+            className={styles.style6}
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-950 text-white shadow-lg shadow-violet-500/20 dark:bg-white dark:text-slate-950">
-              <BrainCircuit className="size-4.5" />
+            <span className={styles.style7}>
+              <BrainCircuit className={styles.style8} />
             </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-bold tracking-tight">
+            <span className={styles.style9}>
+              <span className={styles.style10}>
                 Board Systems Lab
               </span>
-              <span className="hidden text-[11px] text-slate-500 sm:block dark:text-slate-400">
+              <span className={styles.style11}>
                 Interview prep, grounded in your code
               </span>
             </span>
@@ -180,7 +181,7 @@ export function InterviewGuide() {
 
           <nav
             aria-label="Study modes"
-            className="ml-auto hidden items-center rounded-xl border border-slate-200 bg-slate-100/70 p-1 md:flex dark:border-white/10 dark:bg-white/5"
+            className={styles.style12}
           >
             <ModeButton
               active={view === "learn"}
@@ -202,15 +203,15 @@ export function InterviewGuide() {
             />
           </nav>
 
-          <div className="ml-auto flex items-center gap-1 md:ml-2">
-            <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold sm:flex dark:border-white/10 dark:bg-white/5">
+          <div className={styles.style13}>
+            <div className={styles.style14}>
               <span
-                className="grid size-5 place-items-center rounded-full text-[9px] font-bold text-violet-700 dark:text-violet-300"
+                className={styles.style15}
                 style={{
                   background: `conic-gradient(rgb(124 58 237) ${completionPercent}%, rgb(226 232 240) 0)`,
                 }}
               >
-                <span className="grid size-3.5 place-items-center rounded-full bg-white dark:bg-slate-950">
+                <span className={styles.style16}>
                   {completionPercent}
                 </span>
               </span>
@@ -228,7 +229,7 @@ export function InterviewGuide() {
               variant="outline"
               nativeButton={false}
               render={<Link href="/" />}
-              className="hidden sm:inline-flex"
+              className={styles.style17}
             >
               <ArrowLeft />
               Board
@@ -236,7 +237,7 @@ export function InterviewGuide() {
           </div>
         </div>
 
-        <div className="flex border-t border-slate-200/70 px-4 py-2 md:hidden dark:border-white/10">
+        <div className={styles.style18}>
           <ModeButton
             active={view === "learn"}
             icon={BookOpen}
@@ -261,8 +262,8 @@ export function InterviewGuide() {
         </div>
       </header>
 
-      <div className="relative mx-auto grid max-w-[1720px] lg:grid-cols-[290px_minmax(0,1fr)]">
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] border-r border-slate-200/80 bg-white/55 lg:block dark:border-white/10 dark:bg-white/[.015]">
+      <div className={styles.style19}>
+        <aside className={styles.style20}>
           <StudyNavigation
             search={search}
             setSearch={setSearch}
@@ -274,7 +275,7 @@ export function InterviewGuide() {
           />
         </aside>
 
-        <main className="min-w-0 px-4 py-7 sm:px-7 lg:px-10 lg:py-10 xl:px-14">
+        <main className={styles.style21}>
           {view === "learn" &&
             (selectedLesson ? (
               <LessonView
@@ -309,15 +310,15 @@ export function InterviewGuide() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div className={styles.style22}>
           <button
-            className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
+            className={styles.style23}
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close navigation"
           />
-          <aside className="absolute inset-y-0 left-0 w-[min(88vw,340px)] border-r border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0d1018]">
-            <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4 dark:border-white/10">
-              <span className="font-bold">Study map</span>
+          <aside className={styles.style24}>
+            <div className={styles.style25}>
+              <span className={styles.style26}>Study map</span>
               <Button
                 variant="ghost"
                 size="icon"
@@ -360,14 +361,14 @@ function ModeButton({
     <button
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+        styles.style27,
         active
-          ? "bg-white text-slate-950 shadow-sm ring-1 ring-slate-950/5 dark:bg-white/10 dark:text-white dark:ring-white/10"
-          : "text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
-        mobile && "flex-1"
+          ? styles.style28
+          : styles.style29,
+        mobile && styles.style30
       )}
     >
-      <Icon className="size-3.5" />
+      <Icon className={styles.style31} />
       {label}
     </button>
   )
@@ -391,35 +392,35 @@ function StudyNavigation({
   resetProgress: () => void
 }) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-slate-200/80 p-4 dark:border-white/10">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+    <div className={styles.style32}>
+      <div className={styles.style33}>
+        <div className={styles.style34}>
+          <Search className={styles.style35} />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search concepts..."
-            className="h-9 rounded-xl border-slate-200 bg-white pl-9 dark:border-white/10 dark:bg-white/5"
+            className={styles.style36}
           />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className={styles.style37}>
         <button
           onClick={() => chooseLesson(null)}
           className={cn(
-            "mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition",
+            styles.style38,
             selectedLessonId === null
-              ? "bg-slate-950 text-white shadow-lg shadow-slate-950/10 dark:bg-white dark:text-slate-950"
-              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5"
+              ? styles.style39
+              : styles.style40
           )}
         >
-          <Sparkles className="size-4" />
+          <Sparkles className={styles.style41} />
           Overview
         </button>
-        <p className="px-3 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[.2em] text-slate-400">
+        <p className={styles.style42}>
           Learning path
         </p>
-        <div className="space-y-1">
+        <div className={styles.style43}>
           {filteredLessons.map((lesson) => {
             const accent = accentClasses[lesson.accent]
             const active = selectedLessonId === lesson.id
@@ -429,28 +430,28 @@ function StudyNavigation({
                 key={lesson.id}
                 onClick={() => chooseLesson(lesson.id)}
                 className={cn(
-                  "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition",
+                  styles.style44,
                   active
                     ? cn(accent.soft, accent.text)
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5"
+                    : styles.style40
                 )}
               >
                 <span
                   className={cn(
-                    "grid size-7 shrink-0 place-items-center rounded-lg border text-[10px] font-bold",
+                    styles.style45,
                     active
                       ? cn(accent.border, accent.soft)
-                      : "border-slate-200 bg-white text-slate-400 dark:border-white/10 dark:bg-white/5",
-                    done && "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                      : styles.style46,
+                    done && styles.style47
                   )}
                 >
-                  {done ? <Check className="size-3.5" /> : lesson.index}
+                  {done ? <Check className={styles.style31} /> : lesson.index}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-semibold">
+                <span className={styles.style48}>
+                  <span className={styles.style49}>
                     {lesson.shortTitle}
                   </span>
-                  <span className="mt-0.5 block text-[10px] text-slate-400">
+                  <span className={styles.style50}>
                     {lesson.minutes} min
                   </span>
                 </span>
@@ -459,17 +460,17 @@ function StudyNavigation({
           })}
         </div>
         {!filteredLessons.length && (
-          <div className="px-3 py-8 text-center text-xs text-slate-400">
+          <div className={styles.style51}>
             No concepts match “{search}”.
           </div>
         )}
       </div>
-      <div className="border-t border-slate-200/80 p-3 dark:border-white/10">
+      <div className={styles.style52}>
         <button
           onClick={resetProgress}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/5 dark:hover:text-slate-200"
+          className={styles.style53}
         >
-          <RotateCcw className="size-3.5" />
+          <RotateCcw className={styles.style31} />
           Reset study progress
         </button>
       </div>
@@ -493,38 +494,38 @@ function Overview({
   onChangeView: (view: View) => void
 }) {
   return (
-    <div className="mx-auto max-w-7xl">
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white px-6 py-10 shadow-[0_30px_100px_-60px_rgba(15,23,42,.35)] sm:px-10 sm:py-14 dark:border-white/10 dark:bg-white/[.035]">
+    <div className={styles.style54}>
+      <section className={styles.style55}>
         <div
           aria-hidden="true"
-          className="absolute -right-24 -top-32 size-80 rounded-full bg-violet-500/15 blur-3xl"
+          className={styles.style56}
         />
         <div
           aria-hidden="true"
-          className="absolute -bottom-36 left-1/3 size-72 rounded-full bg-cyan-500/10 blur-3xl"
+          className={styles.style57}
         />
-        <div className="relative grid gap-10 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-center">
+        <div className={styles.style58}>
           <div>
-            <Badge className="mb-5 border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300">
+            <Badge className={styles.style59}>
               <Sparkles />
               Built from the real repository
             </Badge>
-            <h1 className="max-w-4xl text-balance text-4xl font-black tracking-[-.045em] sm:text-6xl lg:text-7xl">
+            <h1 className={styles.style60}>
               Understand the board.
-              <span className="block bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-500 bg-clip-text text-transparent">
+              <span className={styles.style61}>
                 Defend every decision.
               </span>
             </h1>
-            <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-slate-600 sm:text-lg dark:text-slate-300">
+            <p className={styles.style62}>
               Ten focused modules, five animated system traces, exact code patterns,
-              and a 35-question confidence drill—designed for a mid-level interview
+              and a {allQuestions.length}-question confidence drill—designed for a mid-level interview
               with senior follow-ups.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className={styles.style63}>
               <Button
                 size="lg"
                 onClick={onStart}
-                className="h-11 rounded-xl bg-slate-950 px-5 text-white shadow-xl shadow-violet-500/20 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                className={styles.style64}
               >
                 <Play fill="currentColor" />
                 Start the learning path
@@ -533,7 +534,7 @@ function Overview({
                 size="lg"
                 variant="outline"
                 onClick={() => onChangeView("flows")}
-                className="h-11 rounded-xl px-5"
+                className={styles.style65}
               >
                 <GitBranch />
                 Explore a system flow
@@ -544,7 +545,7 @@ function Overview({
         </div>
       </section>
 
-      <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className={styles.style66}>
         <Metric
           label="Learning progress"
           value={`${completionPercent}%`}
@@ -575,26 +576,26 @@ function Overview({
         />
       </section>
 
-      <section className="mt-12">
-        <div className="mb-5 flex items-end justify-between gap-4">
+      <section className={styles.style67}>
+        <div className={styles.style68}>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-600 dark:text-violet-400">
+            <p className={styles.style69}>
               Guided curriculum
             </p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+            <h2 className={styles.style70}>
               From route shell to production redesign
             </h2>
           </div>
           <Button
             variant="ghost"
             onClick={() => onChangeView("drill")}
-            className="hidden sm:inline-flex"
+            className={styles.style17}
           >
             Jump to drill
             <ArrowRight />
           </Button>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className={styles.style71}>
           {lessons.map((lesson) => (
             <LessonCard
               key={lesson.id}
@@ -606,20 +607,20 @@ function Overview({
         </div>
       </section>
 
-      <section className="mt-12 grid gap-5 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-950/10 dark:border-white/10">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-cyan-300">
-            <Layers3 className="size-4" />
+      <section className={styles.style72}>
+        <div className={styles.style73}>
+          <div className={styles.style74}>
+            <Layers3 className={styles.style41} />
             The core equation
           </div>
-          <div className="mt-6 space-y-3 font-mono text-sm">
+          <div className={styles.style75}>
             <StateRow number="01" label="confirmed" note="durable truth" color="emerald" />
-            <div className="pl-5 text-slate-500">+</div>
+            <div className={styles.style76}>+</div>
             <StateRow number="02" label="pending[]" note="durable intent" color="amber" />
-            <div className="pl-5 text-slate-500">= reduce(applyOperation)</div>
+            <div className={styles.style76}>= reduce(applyOperation)</div>
             <StateRow number="03" label="projected" note="visible board" color="violet" />
           </div>
-          <p className="mt-6 text-sm leading-6 text-slate-400">
+          <p className={styles.style77}>
             If one operation fails, remove only that intent and rebuild from the
             latest truth. Never restore an old whole-array snapshot.
           </p>
@@ -639,37 +640,37 @@ function ArchitectureMap() {
     ["Repository", "Confirmed"],
   ]
   return (
-    <div className="relative rounded-3xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-black/20">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">
+    <div className={styles.style78}>
+      <div className={styles.style79}>
+        <span className={styles.style80}>
           Runtime architecture
         </span>
-        <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
+        <span className={styles.style81}>
+          <span className={styles.style82} />
           deterministic
         </span>
       </div>
-      <div className="space-y-2">
+      <div className={styles.style83}>
         {nodes.map(([label, meta], index) => (
           <div key={label}>
             <div
               className={cn(
-                "flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm dark:bg-white/5",
+                styles.style84,
                 index === 3
-                  ? "border-violet-500/30 ring-4 ring-violet-500/5"
-                  : "border-slate-200 dark:border-white/10"
+                  ? styles.style85
+                  : styles.style86
               )}
             >
-              <span className="grid size-7 place-items-center rounded-lg bg-slate-950 font-mono text-[10px] font-bold text-white dark:bg-white dark:text-slate-950">
+              <span className={styles.style87}>
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <span className="flex-1 text-sm font-bold">{label}</span>
-              <span className="rounded-full bg-slate-100 px-2 py-1 font-mono text-[9px] text-slate-500 dark:bg-white/10 dark:text-slate-400">
+              <span className={styles.style88}>{label}</span>
+              <span className={styles.style89}>
                 {meta}
               </span>
             </div>
             {index < nodes.length - 1 && (
-              <div className="ml-6 h-2 border-l border-dashed border-slate-300 dark:border-white/20" />
+              <div className={styles.style90} />
             )}
           </div>
         ))}
@@ -693,17 +694,17 @@ function Metric({
 }) {
   const color = accentClasses[accent]
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[.035]">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+    <div className={styles.style91}>
+      <div className={styles.style92}>
+        <span className={styles.style93}>
           {label}
         </span>
-        <span className={cn("grid size-8 place-items-center rounded-lg", color.soft, color.text)}>
-          <Icon className="size-4" />
+        <span className={cn(styles.style94, color.soft, color.text)}>
+          <Icon className={styles.style41} />
         </span>
       </div>
-      <div className="mt-3 text-2xl font-black tracking-tight">{value}</div>
-      <div className="mt-1 text-[11px] text-slate-400">{detail}</div>
+      <div className={styles.style95}>{value}</div>
+      <div className={styles.style96}>{detail}</div>
     </div>
   )
 }
@@ -721,36 +722,36 @@ function LessonCard({
   return (
     <button
       onClick={onClick}
-      className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-white/[.035]"
+      className={styles.style97}
     >
       <div
         className={cn(
-          "absolute inset-x-0 top-0 h-0.5 opacity-0 transition group-hover:opacity-100",
+          styles.style98,
           accent.solid
         )}
       />
-      <div className="flex items-start justify-between gap-3">
-        <span className={cn("font-mono text-xs font-bold", accent.text)}>
+      <div className={styles.style99}>
+        <span className={cn(styles.style100, accent.text)}>
           {lesson.index}
         </span>
         {complete ? (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="size-3.5" />
+          <span className={styles.style101}>
+            <CheckCircle2 className={styles.style31} />
             Complete
           </span>
         ) : (
-          <span className="text-[10px] font-medium text-slate-400">
+          <span className={styles.style102}>
             {lesson.minutes} min
           </span>
         )}
       </div>
-      <h3 className="mt-6 text-base font-black tracking-tight">{lesson.title}</h3>
-      <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
+      <h3 className={styles.style103}>{lesson.title}</h3>
+      <p className={styles.style104}>
         {lesson.summary}
       </p>
-      <div className="mt-5 flex items-center gap-1 text-xs font-bold">
+      <div className={styles.style105}>
         Study module
-        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+        <ArrowRight className={styles.style106} />
       </div>
     </button>
   )
@@ -768,49 +769,49 @@ function StateRow({
   color: "emerald" | "amber" | "violet"
 }) {
   const colors = {
-    emerald: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
-    amber: "border-amber-400/20 bg-amber-400/10 text-amber-300",
-    violet: "border-violet-400/20 bg-violet-400/10 text-violet-300",
+    emerald: styles.stateEmerald,
+    amber: styles.stateAmber,
+    violet: styles.stateViolet,
   }
   return (
-    <div className={cn("flex items-center gap-3 rounded-xl border px-3 py-2.5", colors[color])}>
-      <span className="text-[10px] opacity-60">{number}</span>
-      <span className="font-bold">{label}</span>
-      <span className="ml-auto text-[10px] opacity-70">{note}</span>
+    <div className={cn(styles.style107, colors[color])}>
+      <span className={styles.style108}>{number}</span>
+      <span className={styles.style26}>{label}</span>
+      <span className={styles.style109}>{note}</span>
     </div>
   )
 }
 
 function VirtualizerMini() {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[.035]">
-      <div className="flex items-center justify-between">
+    <div className={styles.style110}>
+      <div className={styles.style92}>
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-rose-600 dark:text-rose-400">
+          <p className={styles.style111}>
             Virtual viewport
           </p>
-          <h3 className="mt-2 text-xl font-black tracking-tight">1,000 tasks. 12 DOM rows.</h3>
+          <h3 className={styles.style112}>1,000 tasks. 12 DOM rows.</h3>
         </div>
-        <span className="grid size-10 place-items-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+        <span className={styles.style113}>
           <Layers3 />
         </span>
       </div>
-      <div className="relative mt-6 h-44 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 p-3 dark:border-white/10 dark:bg-black/30">
-        <div className="absolute bottom-3 right-2 top-3 w-1 rounded-full bg-slate-200 dark:bg-white/10">
-          <div className="mt-7 h-9 rounded-full bg-rose-500" />
+      <div className={styles.style114}>
+        <div className={styles.style115}>
+          <div className={styles.style116} />
         </div>
-        <div className="space-y-2 pr-4">
+        <div className={styles.style117}>
           {[241, 242, 243, 244].map((row, index) => (
             <div
               key={row}
               className={cn(
-                "flex h-8 items-center gap-3 rounded-lg border bg-white px-3 text-[10px] shadow-sm dark:border-white/10 dark:bg-white/5",
-                (index === 0 || index === 3) && "opacity-40"
+                styles.style118,
+                (index === 0 || index === 3) && styles.style119
               )}
             >
-              <span className="font-mono text-slate-400">#{row}</span>
-              <span className="h-1.5 flex-1 rounded-full bg-slate-200 dark:bg-white/10" />
-              <span className="rounded bg-rose-500/10 px-1.5 py-0.5 font-mono text-rose-600 dark:text-rose-300">
+              <span className={styles.style120}>#{row}</span>
+              <span className={styles.style121} />
+              <span className={styles.style122}>
                 {index === 0 || index === 3 ? "overscan" : "visible"}
               </span>
             </div>
@@ -834,53 +835,53 @@ function LessonView({
 }) {
   const accent = accentClasses[lesson.accent]
   return (
-    <article className="mx-auto max-w-6xl">
-      <header className="border-b border-slate-200 pb-8 dark:border-white/10">
-        <div className="flex flex-wrap items-center gap-2">
+    <article className={styles.style123}>
+      <header className={styles.style124}>
+        <div className={styles.style125}>
           <Badge className={cn(accent.soft, accent.text, accent.border)}>
             Module {lesson.index}
           </Badge>
-          <span className="flex items-center gap-1.5 text-xs text-slate-400">
-            <TimerReset className="size-3.5" />
+          <span className={styles.style126}>
+            <TimerReset className={styles.style31} />
             {lesson.minutes} minutes
           </span>
         </div>
-        <h1 className="mt-5 text-balance text-4xl font-black tracking-[-.04em] sm:text-6xl">
+        <h1 className={styles.style127}>
           {lesson.title}
         </h1>
-        <p className="mt-5 max-w-3xl text-pretty text-base leading-7 text-slate-600 sm:text-lg dark:text-slate-300">
+        <p className={styles.style128}>
           {lesson.summary}
         </p>
-        <div className="mt-7 flex flex-wrap gap-3">
+        <div className={styles.style129}>
           <Button
             onClick={onToggleComplete}
             className={cn(
-              "h-10 rounded-xl px-4",
+              styles.style130,
               completed
-                ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                : "bg-slate-950 text-white dark:bg-white dark:text-slate-950"
+                ? styles.style131
+                : styles.style132
             )}
           >
             {completed ? <CheckCircle2 /> : <Circle />}
             {completed ? "Completed" : "Mark complete"}
           </Button>
-          <Button variant="outline" className="h-10 rounded-xl" onClick={onNext}>
+          <Button variant="outline" className={styles.style133} onClick={onNext}>
             Next module
             <ArrowRight />
           </Button>
         </div>
       </header>
 
-      <section className="grid gap-4 py-8 md:grid-cols-3">
+      <section className={styles.style134}>
         {lesson.outcomes.map((outcome, index) => (
           <div
             key={outcome}
-            className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[.035]"
+            className={styles.style135}
           >
-            <span className={cn("font-mono text-[10px] font-bold", accent.text)}>
+            <span className={cn(styles.style136, accent.text)}>
               OUTCOME {String(index + 1).padStart(2, "0")}
             </span>
-            <p className="mt-3 text-sm font-semibold leading-6">{outcome}</p>
+            <p className={styles.style137}>{outcome}</p>
           </div>
         ))}
       </section>
@@ -890,24 +891,24 @@ function LessonView({
         title="What you need to understand"
         description="Lead with the mental model, then connect it to code."
       />
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className={styles.style138}>
         {lesson.concepts.map((concept, index) => (
           <div
             key={concept.title}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[.035]"
+            className={styles.style139}
           >
-            <span className={cn("grid size-8 place-items-center rounded-lg font-mono text-xs font-bold", accent.soft, accent.text)}>
+            <span className={cn(styles.style140, accent.soft, accent.text)}>
               {index + 1}
             </span>
-            <h3 className="mt-5 font-black tracking-tight">{concept.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+            <h3 className={styles.style141}>{concept.title}</h3>
+            <p className={styles.style142}>
               {concept.body}
             </p>
           </div>
         ))}
       </section>
 
-      <section className="mt-12 grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
+      <section className={styles.style143}>
         <div>
           <SectionHeading
             eyebrow="Repository syntax"
@@ -922,15 +923,15 @@ function LessonView({
             title="Mental model"
             description="Practice this sequence without notes."
           />
-          <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-xl dark:border-white/10">
+          <div className={styles.style144}>
             {lesson.mentalModel.map((item, index) => (
               <div key={item}>
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-                  <span className={cn("size-2 rounded-full", accent.solid)} />
-                  <span className="text-xs font-semibold">{item}</span>
+                <div className={styles.style145}>
+                  <span className={cn(styles.style146, accent.solid)} />
+                  <span className={styles.style147}>{item}</span>
                 </div>
                 {index < lesson.mentalModel.length - 1 && (
-                  <div className="ml-[15px] h-3 border-l border-dashed border-white/20" />
+                  <div className={styles.style148} />
                 )}
               </div>
             ))}
@@ -939,7 +940,7 @@ function LessonView({
       </section>
 
       {lesson.id === "virtual" && (
-        <section className="mt-12">
+        <section className={styles.style67}>
           <SectionHeading
             eyebrow="Interactive lab"
             title="See virtualization geometry"
@@ -950,7 +951,7 @@ function LessonView({
       )}
 
       {lesson.id === "query" && (
-        <section className="mt-12">
+        <section className={styles.style67}>
           <SectionHeading
             eyebrow="Interactive lab"
             title="Test boolean precedence"
@@ -960,7 +961,7 @@ function LessonView({
         </section>
       )}
 
-      <section className="mt-12">
+      <section className={styles.style67}>
         <SectionHeading
           eyebrow="Interview drill"
           title="Answer before revealing"
@@ -969,31 +970,31 @@ function LessonView({
         <QuestionAccordion questions={lesson.questions} accent={lesson.accent} />
       </section>
 
-      <section className="mt-12 rounded-3xl border border-amber-500/20 bg-amber-500/[.06] p-6">
-        <div className="flex items-center gap-2 text-sm font-black text-amber-800 dark:text-amber-300">
-          <Zap className="size-4" />
+      <section className={styles.style149}>
+        <div className={styles.style150}>
+          <Zap className={styles.style41} />
           Common traps
         </div>
-        <ul className="mt-4 space-y-3">
+        <ul className={styles.style151}>
           {lesson.pitfalls.map((pitfall) => (
-            <li key={pitfall} className="flex gap-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-              <span className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-500" />
+            <li key={pitfall} className={styles.style152}>
+              <span className={styles.style153} />
               {pitfall}
             </li>
           ))}
         </ul>
       </section>
 
-      <footer className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-200 py-8 sm:flex-row dark:border-white/10">
+      <footer className={styles.style154}>
         <div>
-          <p className="text-sm font-black">
+          <p className={styles.style155}>
             Can you explain this module without reading?
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className={styles.style156}>
             Mark it complete, then validate yourself in Drill mode.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className={styles.style157}>
           <Button variant="outline" onClick={onToggleComplete}>
             {completed ? <CheckCircle2 /> : <Circle />}
             {completed ? "Completed" : "Mark complete"}
@@ -1018,12 +1019,12 @@ function SectionHeading({
   description: string
 }) {
   return (
-    <div className="mb-5">
-      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-violet-600 dark:text-violet-400">
+    <div className={styles.style158}>
+      <p className={styles.style159}>
         {eyebrow}
       </p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight">{title}</h2>
-      <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+      <h2 className={styles.style160}>{title}</h2>
+      <p className={styles.style161}>
         {description}
       </p>
     </div>
@@ -1049,26 +1050,26 @@ function CodeExplorer({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0b0e14] shadow-2xl shadow-slate-950/15">
-      <div className="flex items-center gap-1 border-b border-white/10 bg-white/[.035] p-2">
-        <div className="mr-2 flex gap-1.5 px-1">
-          <span className="size-2.5 rounded-full bg-rose-500" />
-          <span className="size-2.5 rounded-full bg-amber-400" />
-          <span className="size-2.5 rounded-full bg-emerald-500" />
+    <div className={styles.style162}>
+      <div className={styles.style163}>
+        <div className={styles.style164}>
+          <span className={styles.style165} />
+          <span className={styles.style166} />
+          <span className={styles.style167} />
         </div>
-        <div className="flex min-w-0 flex-1 overflow-x-auto">
+        <div className={styles.style168}>
           {samples.map((sample, index) => (
             <button
               key={sample.label}
               onClick={() => setActiveIndex(index)}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition",
+                styles.style169,
                 activeIndex === index
-                  ? "bg-white/10 text-white"
-                  : "text-slate-500 hover:text-slate-300"
+                  ? styles.style170
+                  : styles.style171
               )}
             >
-              <FileCode2 className="size-3" />
+              <FileCode2 className={styles.style172} />
               {sample.label}
             </button>
           ))}
@@ -1077,17 +1078,17 @@ function CodeExplorer({
           variant="ghost"
           size="icon-sm"
           onClick={copy}
-          className="text-slate-400 hover:bg-white/10 hover:text-white"
+          className={styles.style173}
           aria-label="Copy code"
         >
           {copied ? <Check /> : <Copy />}
         </Button>
       </div>
-      <div className="flex items-center justify-between border-b border-white/5 px-4 py-2 font-mono text-[10px] text-slate-500">
+      <div className={styles.style174}>
         <span>{active.file}</span>
         <span className={color.text}>{active.language}</span>
       </div>
-      <pre className="max-h-[520px] overflow-auto p-5 text-[12px] leading-6 text-slate-300 sm:text-[13px]">
+      <pre className={styles.style175}>
         <code>{active.code}</code>
       </pre>
     </div>
@@ -1104,15 +1105,15 @@ function QuestionAccordion({
   const [open, setOpen] = useState<Set<string>>(new Set())
   const color = accentClasses[accent]
   return (
-    <div className="space-y-2">
+    <div className={styles.style83}>
       {questions.map((question, index) => {
         const expanded = open.has(question.id)
         return (
           <div
             key={question.id}
             className={cn(
-              "overflow-hidden rounded-2xl border bg-white transition dark:bg-white/[.035]",
-              expanded ? color.border : "border-slate-200 dark:border-white/10"
+              styles.style176,
+              expanded ? color.border : styles.style86
             )}
           >
             <button
@@ -1124,22 +1125,22 @@ function QuestionAccordion({
                   return next
                 })
               }
-              className="flex w-full items-center gap-4 p-4 text-left"
+              className={styles.style177}
               aria-expanded={expanded}
             >
-              <span className={cn("font-mono text-[10px] font-bold", color.text)}>
+              <span className={cn(styles.style136, color.text)}>
                 Q{String(index + 1).padStart(2, "0")}
               </span>
-              <span className="flex-1 text-sm font-bold">{question.question}</span>
+              <span className={styles.style88}>{question.question}</span>
               <ChevronDown
                 className={cn(
-                  "size-4 text-slate-400 transition-transform",
-                  expanded && "rotate-180"
+                  styles.style178,
+                  expanded && styles.style179
                 )}
               />
             </button>
             {expanded && (
-              <div className="border-t border-slate-200 px-4 py-4 pl-[4.25rem] text-sm leading-7 text-slate-600 dark:border-white/10 dark:text-slate-300">
+              <div className={styles.style180}>
                 {question.answer}
               </div>
             )}
@@ -1164,14 +1165,14 @@ function VirtualizerLab() {
   const rows = Array.from({ length: end - start }, (_, index) => start + index)
 
   return (
-    <div className="grid gap-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[minmax(0,1fr)_300px] dark:border-white/10 dark:bg-white/[.035]">
+    <div className={styles.style181}>
       <div>
         <div
-          className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-black/30"
+          className={styles.style182}
           style={{ height: viewportHeight }}
         >
           <div
-            className="relative"
+            className={styles.style34}
             style={{
               height: totalHeight,
               transform: `translateY(-${scrollOffset}px)`,
@@ -1183,24 +1184,24 @@ function VirtualizerLab() {
                 <div
                   key={row}
                   className={cn(
-                    "absolute left-3 right-3 flex items-center gap-3 rounded-lg border bg-white px-3 text-xs shadow-sm transition dark:border-white/10 dark:bg-white/5",
-                    !visible && "border-dashed opacity-40"
+                    styles.style183,
+                    !visible && styles.style184
                   )}
                   style={{
                     height: rowHeight - 6,
                     transform: `translateY(${row * rowHeight + 3}px)`,
                   }}
                 >
-                  <span className="w-12 font-mono text-[10px] text-slate-400">
+                  <span className={styles.style185}>
                     #{row + 1}
                   </span>
-                  <span className="h-1.5 flex-1 rounded-full bg-slate-200 dark:bg-white/10" />
+                  <span className={styles.style121} />
                   <span
                     className={cn(
-                      "rounded px-1.5 py-0.5 font-mono text-[9px]",
+                      styles.style186,
                       visible
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
-                        : "bg-amber-500/10 text-amber-600 dark:text-amber-300"
+                        ? styles.style187
+                        : styles.style188
                     )}
                   >
                     {visible ? "visible" : "overscan"}
@@ -1210,10 +1211,10 @@ function VirtualizerLab() {
             })}
           </div>
         </div>
-        <label className="mt-5 block">
-          <span className="mb-2 flex justify-between text-xs font-semibold">
+        <label className={styles.style189}>
+          <span className={styles.style190}>
             Scroll offset
-            <span className="font-mono text-slate-400">{scrollOffset.toLocaleString()}px</span>
+            <span className={styles.style120}>{scrollOffset.toLocaleString()}px</span>
           </span>
           <input
             type="range"
@@ -1222,21 +1223,21 @@ function VirtualizerLab() {
             step={rowHeight}
             value={scrollOffset}
             onChange={(event) => setScrollOffset(Number(event.target.value))}
-            className="w-full accent-violet-600"
+            className={styles.style191}
           />
         </label>
       </div>
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2">
+      <div className={styles.style192}>
+        <div className={styles.style193}>
           <LabStat label="Logical rows" value="1,000" />
           <LabStat label="DOM rows" value={String(rows.length)} />
           <LabStat label="First visible" value={`#${firstVisible + 1}`} />
           <LabStat label="Total height" value="42,000px" />
         </div>
-        <label className="block rounded-xl border border-slate-200 p-3 dark:border-white/10">
-          <span className="flex items-center justify-between text-xs font-semibold">
+        <label className={styles.style194}>
+          <span className={styles.style195}>
             Overscan
-            <span className="font-mono text-violet-600 dark:text-violet-300">
+            <span className={styles.style196}>
               {overscan} rows
             </span>
           </span>
@@ -1246,15 +1247,15 @@ function VirtualizerLab() {
             max={8}
             value={overscan}
             onChange={(event) => setOverscan(Number(event.target.value))}
-            className="mt-3 w-full accent-violet-600"
+            className={styles.style197}
           />
         </label>
-        <div className="rounded-xl bg-slate-950 p-4 text-xs leading-6 text-slate-300">
-          <p className="font-mono text-[10px] text-cyan-300">mounted range</p>
-          <p className="mt-1 font-mono">
+        <div className={styles.style198}>
+          <p className={styles.style199}>mounted range</p>
+          <p className={styles.style200}>
             [{start}, {end - 1}]
           </p>
-          <p className="mt-3 text-slate-500">
+          <p className={styles.style201}>
             The logical height never changes. Only the mounted range responds to
             scroll offset and overscan.
           </p>
@@ -1266,11 +1267,11 @@ function VirtualizerLab() {
 
 function LabStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 p-3 dark:border-white/10">
-      <div className="text-[9px] font-bold uppercase tracking-[.14em] text-slate-400">
+    <div className={styles.style202}>
+      <div className={styles.style203}>
         {label}
       </div>
-      <div className="mt-1 font-mono text-sm font-bold">{value}</div>
+      <div className={styles.style204}>{value}</div>
     </div>
   )
 }
@@ -1281,42 +1282,42 @@ function QueryPrecedenceLab() {
   const toggle = (key: keyof typeof values) =>
     setValues((current) => ({ ...current, [key]: !current[key] }))
   return (
-    <div className="grid gap-5 rounded-3xl border border-slate-200 bg-white p-5 lg:grid-cols-[minmax(0,1fr)_320px] dark:border-white/10 dark:bg-white/[.035]">
-      <div className="rounded-2xl bg-slate-950 p-5 text-white">
-        <div className="font-mono text-xs text-slate-500">query logic</div>
-        <div className="mt-3 font-mono text-xl font-bold sm:text-2xl">
-          <span className="text-violet-300">A</span>
-          <span className="text-slate-500"> OR </span>
-          <span className="text-cyan-300">(B AND C)</span>
+    <div className={styles.style205}>
+      <div className={styles.style206}>
+        <div className={styles.style207}>query logic</div>
+        <div className={styles.style208}>
+          <span className={styles.style209}>A</span>
+          <span className={styles.style210}> OR </span>
+          <span className={styles.style211}>(B AND C)</span>
         </div>
-        <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className={styles.style212}>
           <LogicNode label="A" value={values.A} onClick={() => toggle("A")} />
-          <span className="font-mono text-xs text-slate-500">OR</span>
-          <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3">
-            <div className="mb-2 text-center font-mono text-[9px] uppercase tracking-widest text-cyan-300">
+          <span className={styles.style207}>OR</span>
+          <div className={styles.style213}>
+            <div className={styles.style214}>
               AND clause
             </div>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div className={styles.style215}>
               <LogicNode label="B" value={values.B} onClick={() => toggle("B")} />
-              <span className="font-mono text-[10px] text-slate-500">AND</span>
+              <span className={styles.style216}>AND</span>
               <LogicNode label="C" value={values.C} onClick={() => toggle("C")} />
             </div>
           </div>
         </div>
       </div>
-      <div className="flex flex-col justify-between rounded-2xl border border-slate-200 p-5 dark:border-white/10">
+      <div className={styles.style217}>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">
+          <p className={styles.style218}>
             Evaluation
           </p>
-          <div className="mt-4 space-y-2 font-mono text-sm">
-            <div className="flex justify-between">
+          <div className={styles.style219}>
+            <div className={styles.style220}>
               <span>B AND C</span>
               <span>{String(values.B && values.C)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className={styles.style220}>
               <span>A OR clause</span>
-              <span className={result ? "text-emerald-500" : "text-rose-500"}>
+              <span className={result ? styles.style221 : styles.style222}>
                 {String(result)}
               </span>
             </div>
@@ -1324,14 +1325,14 @@ function QueryPrecedenceLab() {
         </div>
         <div
           className={cn(
-            "mt-8 rounded-xl border p-4 text-center",
+            styles.style223,
             result
-              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-              : "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+              ? styles.style224
+              : styles.style225
           )}
         >
-          <span className="text-xs font-semibold">Task matches?</span>
-          <div className="mt-1 text-2xl font-black">{result ? "YES" : "NO"}</div>
+          <span className={styles.style147}>Task matches?</span>
+          <div className={styles.style226}>{result ? "YES" : "NO"}</div>
         </div>
       </div>
     </div>
@@ -1351,10 +1352,10 @@ function LogicNode({
     <button
       onClick={onClick}
       className={cn(
-        "rounded-lg border px-3 py-3 text-center font-mono text-xs font-bold transition",
+        styles.style227,
         value
-          ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-300"
-          : "border-white/10 bg-white/5 text-slate-500"
+          ? styles.style228
+          : styles.style229
       )}
     >
       {label} = {String(value)}
@@ -1375,98 +1376,98 @@ function FlowLab() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className={styles.style54}>
       <header>
-        <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
+        <Badge className={styles.style230}>
           <Network />
           Interactive system traces
         </Badge>
-        <h1 className="mt-5 text-4xl font-black tracking-[-.04em] sm:text-6xl">
+        <h1 className={styles.style231}>
           Follow state as it moves.
         </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
+        <p className={styles.style232}>
           Interviewers rarely stop at “what library did you use?” Step through
           ownership, state transitions, and recovery paths.
         </p>
       </header>
 
-      <div className="mt-8 flex gap-2 overflow-x-auto pb-2">
+      <div className={styles.style233}>
         {flows.map((item) => (
           <button
             key={item.id}
             onClick={() => selectFlow(item.id)}
             className={cn(
-              "shrink-0 rounded-xl border px-4 py-2.5 text-left transition",
+              styles.style234,
               item.id === flow.id
                 ? cn(accentClasses[item.accent].soft, accentClasses[item.accent].border)
-                : "border-slate-200 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-white/[.035] dark:hover:bg-white/[.06]"
+                : styles.style235
             )}
           >
-            <span className="block text-xs font-bold">{item.title}</span>
-            <span className="mt-0.5 block text-[10px] text-slate-400">
+            <span className={styles.style236}>{item.title}</span>
+            <span className={styles.style50}>
               {item.steps.length} transitions
             </span>
           </button>
         ))}
       </div>
 
-      <section className="mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-950/5 dark:border-white/10 dark:bg-white/[.035]">
-        <div className="grid xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="p-5 sm:p-8">
-            <div className="flex items-start justify-between gap-4">
+      <section className={styles.style237}>
+        <div className={styles.style238}>
+          <div className={styles.style239}>
+            <div className={styles.style240}>
               <div>
-                <p className={cn("text-[10px] font-bold uppercase tracking-[.2em]", color.text)}>
+                <p className={cn(styles.style241, color.text)}>
                   {flow.title}
                 </p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight">
+                <h2 className={styles.style160}>
                   {flow.summary}
                 </h2>
               </div>
-              <span className="font-mono text-xs text-slate-400">
+              <span className={styles.style242}>
                 {step + 1}/{flow.steps.length}
               </span>
             </div>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={styles.style243}>
               {flow.steps.map((item, index) => (
                 <button
                   key={item.label}
                   onClick={() => setStep(index)}
                   className={cn(
-                    "relative rounded-2xl border p-4 text-left transition",
+                    styles.style244,
                     index === step
-                      ? cn(color.border, color.soft, "shadow-lg", color.glow)
+                      ? cn(color.border, color.soft, styles.style245, color.glow)
                       : index < step
-                        ? "border-emerald-500/20 bg-emerald-500/[.06]"
-                        : "border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[.025]"
+                        ? styles.style246
+                        : styles.style247
                   )}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className={styles.style92}>
                     <span
                       className={cn(
-                        "grid size-7 place-items-center rounded-full border font-mono text-[10px] font-bold",
+                        styles.style248,
                         index < step
-                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                          ? styles.style47
                           : index === step
                             ? cn(color.border, color.text)
-                            : "border-slate-200 text-slate-400 dark:border-white/10"
+                            : styles.style249
                       )}
                     >
-                      {index < step ? <Check className="size-3.5" /> : index + 1}
+                      {index < step ? <Check className={styles.style31} /> : index + 1}
                     </span>
                     {index === step && (
-                      <span className={cn("size-2 animate-pulse rounded-full", color.solid)} />
+                      <span className={cn(styles.style250, color.solid)} />
                     )}
                   </div>
-                  <div className="mt-5 text-sm font-black">{item.label}</div>
-                  <div className="mt-1 font-mono text-[9px] text-slate-400">
+                  <div className={styles.style251}>{item.label}</div>
+                  <div className={styles.style252}>
                     {item.owner}
                   </div>
                 </button>
               ))}
             </div>
 
-            <div className="mt-6 flex items-center justify-between">
+            <div className={styles.style253}>
               <Button
                 variant="outline"
                 disabled={step === 0}
@@ -1486,27 +1487,27 @@ function FlowLab() {
             </div>
           </div>
 
-          <div className="border-t border-slate-200 bg-slate-950 p-6 text-white xl:border-l xl:border-t-0 dark:border-white/10">
-            <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.16em] text-slate-500">
-              <span className={cn("size-2 rounded-full", color.solid)} />
+          <div className={styles.style254}>
+            <div className={styles.style255}>
+              <span className={cn(styles.style146, color.solid)} />
               Active transition
             </div>
-            <div className="mt-8 font-mono text-xs text-slate-500">
+            <div className={styles.style256}>
               step_{String(step + 1).padStart(2, "0")}
             </div>
-            <h3 className="mt-2 text-2xl font-black tracking-tight">{active.label}</h3>
-            <p className="mt-4 text-sm leading-7 text-slate-300">{active.detail}</p>
-            <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-4">
-              <span className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">
+            <h3 className={styles.style160}>{active.label}</h3>
+            <p className={styles.style257}>{active.detail}</p>
+            <div className={styles.style258}>
+              <span className={styles.style259}>
                 Owner
               </span>
-              <div className="mt-1 font-mono text-sm text-cyan-300">{active.owner}</div>
+              <div className={styles.style260}>{active.owner}</div>
             </div>
-            <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
-              <span className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">
+            <div className={styles.style261}>
+              <span className={styles.style259}>
                 State after step
               </span>
-              <div className="mt-1 font-mono text-sm text-violet-300">{active.state}</div>
+              <div className={styles.style262}>{active.state}</div>
             </div>
           </div>
         </div>
@@ -1551,22 +1552,22 @@ function DrillMode({
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <header className="text-center">
-        <Badge className="border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300">
+    <div className={styles.style263}>
+      <header className={styles.style264}>
+        <Badge className={styles.style265}>
           <BrainCircuit />
           Confidence drill
         </Badge>
-        <h1 className="mt-5 text-4xl font-black tracking-[-.04em] sm:text-6xl">
+        <h1 className={styles.style231}>
           Answer first. Reveal second.
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
+        <p className={styles.style266}>
           Questions with lower confidence automatically rise to the top. Your ratings
           persist in this browser.
         </p>
       </header>
 
-      <div className="mx-auto mt-8 flex max-w-xl items-center rounded-xl border border-slate-200 bg-white p-1 dark:border-white/10 dark:bg-white/[.035]">
+      <div className={styles.style267}>
         {(
           [
             ["all", `All ${allQuestions.length}`],
@@ -1582,10 +1583,10 @@ function DrillMode({
               setRevealed(false)
             }}
             className={cn(
-              "flex-1 rounded-lg px-3 py-2 text-xs font-bold transition",
+              styles.style268,
               filter === value
-                ? "bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950"
-                : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                ? styles.style269
+                : styles.style270
             )}
           >
             {label}
@@ -1594,15 +1595,15 @@ function DrillMode({
       </div>
 
       {question ? (
-        <section className="relative mx-auto mt-8 min-h-[480px] max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_35px_100px_-45px_rgba(15,23,42,.35)] dark:border-white/10 dark:bg-white/[.035]">
+        <section className={styles.style271}>
           <div
             className={cn(
-              "absolute inset-x-0 top-0 h-1",
+              styles.style272,
               accentClasses[question.accent].solid
             )}
           />
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-white/10">
-            <div className="flex items-center gap-2">
+          <div className={styles.style273}>
+            <div className={styles.style274}>
               <Badge
                 className={cn(
                   accentClasses[question.accent].soft,
@@ -1611,58 +1612,58 @@ function DrillMode({
               >
                 {question.lessonTitle}
               </Badge>
-              <span className="font-mono text-[10px] text-slate-400">
+              <span className={styles.style275}>
                 confidence {confidence[question.id] ?? 0}/2
               </span>
             </div>
-            <span className="font-mono text-xs text-slate-400">
+            <span className={styles.style242}>
               {index + 1}/{queue.length}
             </span>
           </div>
-          <div className="flex min-h-[410px] flex-col p-6 sm:p-10">
-            <div className="flex items-start gap-4">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950">
-                <Clipboard className="size-4" />
+          <div className={styles.style276}>
+            <div className={styles.style277}>
+              <span className={styles.style278}>
+                <Clipboard className={styles.style41} />
               </span>
-              <h2 className="text-balance text-2xl font-black leading-tight tracking-tight sm:text-4xl">
+              <h2 className={styles.style279}>
                 {question.question}
               </h2>
             </div>
 
             {!revealed ? (
-              <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
-                <div className="grid size-16 place-items-center rounded-full border border-dashed border-slate-300 text-slate-400 dark:border-white/20">
-                  <BrainCircuit className="size-6" />
+              <div className={styles.style280}>
+                <div className={styles.style281}>
+                  <BrainCircuit className={styles.style282} />
                 </div>
-                <p className="mt-4 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
+                <p className={styles.style283}>
                   Say the direct answer aloud. Then add one design tradeoff or
                   production limitation.
                 </p>
                 <Button
                   size="lg"
                   onClick={() => setRevealed(true)}
-                  className="mt-6 h-11 rounded-xl px-5"
+                  className={styles.style284}
                 >
                   Reveal model answer
                   <ChevronDown />
                 </Button>
               </div>
             ) : (
-              <div className="mt-8 flex-1">
-                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[.06] p-5 sm:p-6">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="size-4" />
+              <div className={styles.style285}>
+                <div className={styles.style286}>
+                  <div className={styles.style287}>
+                    <CheckCircle2 className={styles.style41} />
                     Model answer
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-slate-700 sm:text-base dark:text-slate-200">
+                  <p className={styles.style288}>
                     {question.answer}
                   </p>
                 </div>
-                <div className="mt-6">
-                  <p className="text-center text-xs font-semibold text-slate-400">
+                <div className={styles.style289}>
+                  <p className={styles.style290}>
                     How confident was your answer?
                   </p>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className={styles.style291}>
                     <ConfidenceButton
                       label="Again"
                       detail="Missed it"
@@ -1688,10 +1689,10 @@ function DrillMode({
           </div>
         </section>
       ) : (
-        <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-emerald-500/20 bg-emerald-500/[.06] p-10 text-center">
-          <CheckCircle2 className="mx-auto size-10 text-emerald-600" />
-          <h2 className="mt-4 text-xl font-black">Nothing in this queue.</h2>
-          <p className="mt-2 text-sm text-slate-500">
+        <div className={styles.style292}>
+          <CheckCircle2 className={styles.style293} />
+          <h2 className={styles.style294}>Nothing in this queue.</h2>
+          <p className={styles.style295}>
             Change the filter or reset a question rating.
           </p>
         </div>
@@ -1711,18 +1712,18 @@ function ConfidenceButton({
   value: Confidence
   onClick: () => void
 }) {
-  const styles = [
-    "border-rose-500/20 bg-rose-500/[.06] text-rose-700 hover:bg-rose-500/10 dark:text-rose-300",
-    "border-amber-500/20 bg-amber-500/[.06] text-amber-700 hover:bg-amber-500/10 dark:text-amber-300",
-    "border-emerald-500/20 bg-emerald-500/[.06] text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300",
+  const confidenceStyles = [
+    styles.confidenceLow,
+    styles.confidenceMedium,
+    styles.confidenceHigh,
   ]
   return (
     <button
       onClick={onClick}
-      className={cn("rounded-xl border p-3 text-center transition", styles[value])}
+      className={cn(styles.style296, confidenceStyles[value])}
     >
-      <span className="block text-xs font-black">{label}</span>
-      <span className="mt-0.5 hidden text-[9px] opacity-70 sm:block">{detail}</span>
+      <span className={styles.style297}>{label}</span>
+      <span className={styles.style298}>{detail}</span>
     </button>
   )
 }

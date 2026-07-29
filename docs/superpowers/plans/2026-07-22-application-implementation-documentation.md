@@ -6,7 +6,7 @@
 
 **Architecture:** Inspect the repository from route entry points through client providers, feature modules, state stores, persistence, UI primitives, tests, and deployment. Validate the traced behavior against the running application and record both intended guarantees and important implementation limits.
 
-**Tech Stack:** Next.js 16 App Router, React 19, TypeScript, TanStack Query, Zustand, dnd-kit, TanStack Virtual, Zod, Tailwind CSS 4, Base UI/shadcn, Vitest, Playwright, Docker.
+**Tech Stack:** Next.js 16 App Router, React 19, TypeScript, TanStack Query, Zustand, dnd-kit, TanStack Virtual, Zod, CSS Modules, Base UI, Vitest, Playwright, Docker.
 
 ---
 

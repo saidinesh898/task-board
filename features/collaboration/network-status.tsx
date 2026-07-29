@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { CloudOff, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { useBoardStore } from "@/stores/board-store"
+import styles from "./network-status.module.css"
 
 export function NetworkStatus() {
   const forcedOffline = useBoardStore((state) => state.forcedOffline)
@@ -32,12 +33,12 @@ export function NetworkStatus() {
 
   if (online) return null
   return (
-    <div role="status" aria-live="polite" className="border-b border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
-      <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 text-sm sm:px-6">
-        <CloudOff className="size-4" />
-        <span className="font-medium">You are offline.</span>
-        <span className="text-xs opacity-80">Changes stay optimistic and sync after reconnection.</span>
-        {pendingCount > 0 && <span className="ml-auto inline-flex items-center gap-1 text-xs"><RefreshCw className="size-3 animate-spin" />{pendingCount} queued</span>}
+    <div role="status" aria-live="polite" className={styles.style1}>
+      <div className={styles.style2}>
+        <CloudOff className={styles.style3} />
+        <span className={styles.style4}>You are offline.</span>
+        <span className={styles.style5}>Changes stay optimistic and sync after reconnection.</span>
+        {pendingCount > 0 && <span className={styles.style6}><RefreshCw className={styles.style7} />{pendingCount} queued</span>}
       </div>
     </div>
   )

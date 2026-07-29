@@ -1,0 +1,33 @@
+.style1 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing, 0.25rem) * 2);
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  --tw-leading: 1;
+  line-height: 1;
+  --tw-font-weight: var(--font-weight-medium, 500);
+  font-weight: var(--font-weight-medium, 500);
+  -webkit-user-select: none;
+  user-select: none;
+  &:is(:where(.group)[data-disabled="true"] *) {
+    pointer-events: none;
+  }
+  &:is(:where(.group)[data-disabled="true"] *) {
+    opacity: 50%;
+  }
+  &:is(:where(.peer):disabled ~ *) {
+    cursor: not-allowed;
+  }
+  &:is(:where(.peer):disabled ~ *) {
+    opacity: 50%;
+  }
+}
+@property --tw-leading {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}

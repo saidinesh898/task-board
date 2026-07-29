@@ -553,7 +553,8 @@ export type TaskPatch =
     minutes: 16,
     accent: "violet",
     outcomes: [
-      "Explain the DndContext/useDroppable/useSortable hierarchy.",
+      "Explain the DragDropProvider/useDroppable/useSortable hierarchy.",
+      "Explain why the current API uses @dnd-kit/react instead of legacy @dnd-kit/core.",
       "Calculate a task position between any two neighbors.",
       "Defend keyboard sensors and the status-select fallback.",
     ],
@@ -561,7 +562,17 @@ export type TaskPatch =
       {
         title: "Three interaction layers",
         body:
-          "DndContext owns sensors and lifecycle. Columns use useDroppable. Cards use useSortable. The grip receives listeners so card content remains interactive.",
+          "DragDropProvider creates one drag manager and context for sensors, collisions, operations, overlays, and announcements. Columns register callback refs with useDroppable. Cards register a card ref and grip handleRef with useSortable.",
+      },
+      {
+        title: "Virtualization owns the DOM",
+        body:
+          "TanStack Virtual mounts and positions rows, so the card keeps SortableKeyboardPlugin and zero-duration Feedback but omits dnd-kit's OptimisticSortingPlugin. The latter physically moves DOM nodes and would compete with React's virtual row tree. Since the source DOM stays put, a collision wrapper excludes source.id; the store commits one move after drop.",
+      },
+      {
+        title: "Package boundaries",
+        body:
+          "@dnd-kit/react contains the current React provider, hooks, overlay, and event types. @dnd-kit/dom contains sensors and plugins. @dnd-kit/collision contains closestCenter. The old core/sortable/utilities packages belong to a different API generation and must not be mixed in.",
       },
       {
         title: "Fractional indexing",
@@ -576,17 +587,52 @@ export type TaskPatch =
     ],
     code: [
       {
-        label: "Sensors",
+        label: "Provider + sensors",
         file: "features/board/board-app.tsx",
-        language: "ts",
-        code: `const sensors = useSensors(
-  useSensor(PointerSensor, {
-    activationConstraint: { distance: 6 },
-  }),
-  useSensor(KeyboardSensor, {
-    coordinateGetter: sortableKeyboardCoordinates,
-  })
-)`,
+        language: "tsx",
+        code: `<DragDropProvider
+  sensors={(defaults) => [
+    ...defaults.filter((sensor) => sensor !== PointerSensor),
+    PointerSensor.configure({
+      activationConstraints: [
+        new PointerActivationConstraints.Distance({ value: 6 }),
+      ],
+    }),
+  ]}
+  onDragEnd={({ canceled, operation }) => {
+    if (canceled || !operation.source || !operation.target) return
+    // Resolve source.id and target.id/data, then commit one move.
+  }}
+>
+  {board}
+</DragDropProvider>`,
+      },
+      {
+        label: "Card + column refs",
+        file: "features/board/task-card.tsx",
+        language: "tsx",
+        code: `const { ref, handleRef, isDragging } = useSortable({
+  id: task.id,
+  index,
+  group: task.status,
+  type: "task",
+  accept: "task",
+  data: { task },
+  collisionDetector: closestCenterExceptSource,
+  plugins: [
+    SortableKeyboardPlugin,
+    Feedback.configure({ dropAnimation: { duration: 0 } }),
+  ],
+})
+
+const { ref: dropRef, isDropTarget } = useDroppable({
+  id: \`column-\${status}\`,
+  type: "column",
+  accept: "task",
+  data: { status },
+  collisionDetector: closestCenter,
+  collisionPriority: 0,
+})`,
       },
       {
         label: "Position",
@@ -603,14 +649,18 @@ export type TaskPatch =
       },
     ],
     mentalModel: [
-      "Pointer/keyboard sensor → active ID",
-      "closestCenter → over ID",
-      "target task or column → destination status",
-      "neighbor ranks → new position",
-      "execute → optimistic move",
+      "Provider → shared drag manager and context",
+      "Card/column refs → registered geometry",
+      "Pointer/keyboard sensor → operation.source",
+      "type + accept + closestCenter → operation.target",
+      "target task/column → status + fractional position",
+      "execute → one optimistic store move",
     ],
     pitfalls: [
-      "Attaching drag listeners to the entire interactive card.",
+      "Mixing legacy @dnd-kit/core hooks with the current @dnd-kit/react provider.",
+      "Forgetting index or using one group value for every column.",
+      "Letting optimistic DOM sorting compete with TanStack Virtual.",
+      "Attaching the handle ref to the entire interactive card.",
       "Claiming advisory presence locks are a security boundary.",
       "Ignoring rank precision after repeated midpoint insertions.",
     ],
@@ -632,6 +682,30 @@ export type TaskPatch =
         question: "What is the production limitation of midpoint ranks?",
         answer:
           "Repeated insertion into the same gap creates very close floating-point values. Production should periodically normalize or use a ranking scheme designed for distributed ordering.",
+      },
+      {
+        id: "drag-4",
+        question: "Why is DragDropProvider required?",
+        answer:
+          "A ref only exposes one DOM node. The provider creates the shared drag manager that sensors, registered sources and targets, collision detection, the overlay, lifecycle events, and accessibility announcements all use. It is scoped to this board because only this subtree participates.",
+      },
+      {
+        id: "drag-5",
+        question: "Does useDroppable return a ref?",
+        answer:
+          "Yes in the current @dnd-kit/react API: it returns a callback ref and isDropTarget. The column calls that ref with the same scroll element stored in parentRef, so TanStack Virtual and dnd-kit can both use one DOM node. The old API named the callback setNodeRef.",
+      },
+      {
+        id: "drag-6",
+        question: "Why import DragDropProvider from @dnd-kit/react instead of @dnd-kit/core?",
+        answer:
+          "DragDropProvider belongs to the current React adapter. The legacy core generation used DndContext and different hooks, events, refs, and sortable setup. The current family separates React bindings, DOM sensors/plugins, and collision algorithms, and those generations should not be mixed.",
+      },
+      {
+        id: "drag-7",
+        question: "How does keyboard dragging work here?",
+        answer:
+          "Focus the grip, press Space or Enter to pick up, use arrow keys to move the collision target, press Space or Enter to drop, or Escape to cancel. SortableKeyboardPlugin provides spatial sorting and the provider's accessibility plugin announces the operation. The status select remains a simpler fallback.",
       },
     ],
   },
@@ -849,12 +923,13 @@ return (task) =>
     shortTitle: "React & UI",
     eyebrow: "Product quality",
     summary:
-      "Connect hooks, selectors, stable identities, headless primitives, semantic tokens, motion preferences, and accessible alternative paths.",
+      "Connect hooks, selectors, stable identities, headless primitives, CSS Modules, semantic tokens, reduced motion, and accessible alternative paths.",
     minutes: 18,
     accent: "emerald",
     outcomes: [
       "Differentiate memo, useMemo, and useCallback.",
       "Explain controlled forms and effect cleanup.",
+      "Explain CSS Module scoping, CVA variant mapping, and semantic variables.",
       "Name concrete accessibility measures beyond the component library.",
     ],
     concepts: [
@@ -866,7 +941,7 @@ return (task) =>
       {
         title: "Headless behavior, owned styling",
         body:
-          "Base UI supplies interaction and accessibility mechanics. Project-owned shadcn components add CVA variants and semantic Tailwind tokens.",
+          "Base UI supplies interaction and accessibility mechanics. Project-owned primitives map CVA variants to scoped CSS Module classes, while global semantic CSS variables keep light and dark themes consistent.",
       },
       {
         title: "Accessibility as composition",
@@ -902,6 +977,23 @@ const pendingIds = useMemo(
   }
 />`,
       },
+      {
+        label: "Scoped styling",
+        file: "components/ui/button.tsx",
+        language: "tsx",
+        code: `import styles from "./button.module.css"
+
+const buttonVariants = cva(styles.root, {
+  variants: {
+    variant: {
+      default: styles.default,
+      destructive: styles.destructive,
+    },
+  },
+})
+
+<Button className={cn(buttonVariants({ variant }), className)} />`,
+      },
     ],
     mentalModel: [
       "Render → derive values",
@@ -909,11 +1001,13 @@ const pendingIds = useMemo(
       "Selector → narrow subscription",
       "Stable ID → identity across systems",
       "Headless primitive → interaction behavior",
-      "Semantic token → theme-independent style",
+      "CSS Module → build-scoped selector",
+      "Semantic variable → theme-independent value",
     ],
     pitfalls: [
       "Using effects to copy values that can be derived during render.",
       "Claiming memoization alone solves 1,000 mounted cards.",
+      "Putting reusable variant logic back into global class names.",
       "Assuming a headless library automatically makes composition accessible.",
     ],
     questions: [
@@ -934,6 +1028,12 @@ const pendingIds = useMemo(
         question: "Name concrete accessibility measures in the board.",
         answer:
           "Keyboard and pointer DnD, a status-select fallback, announcements, landmarks, headings, labels, stable IDs, aria-busy and aria-invalid, focus-managed primitives, shortcut guards, lock descriptions, and reduced motion.",
+      },
+      {
+        id: "react-ui-4",
+        question: "How do CSS Modules, CVA, and theme variables work together?",
+        answer:
+          "A module exports build-scoped class names, CVA selects those classes from typed variant props, and clsx combines conditional states. The declarations consume global semantic variables, so changing the light or dark variable values updates every component without global utility classes or React branches.",
       },
     ],
   },

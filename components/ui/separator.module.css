@@ -1,0 +1,16 @@
+.style1 {
+  flex-shrink: 0;
+  background-color: var(--border);
+  &:where([data-orientation="horizontal"]) {
+    height: 1px;
+  }
+  &:where([data-orientation="horizontal"]) {
+    width: 100%;
+  }
+  &:where([data-orientation="vertical"]) {
+    width: 1px;
+  }
+  &:where([data-orientation="vertical"]) {
+    align-self: stretch;
+  }
+}

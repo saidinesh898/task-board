@@ -86,10 +86,8 @@ The provider nesting order is:
 1. `ThemeProvider` from `next-themes`, using a class attribute, system preference by default, system change support, and transition suppression during a theme switch.
 2. `PersistQueryClientProvider`, which supplies TanStack Query and persists its cache.
 3. `TooltipProvider`, which supplies Base UI tooltip context.
-4. Motion's `MotionConfig`, which honors the user's reduced-motion preference.
-5. `LazyMotion` with `domAnimation`, which loads only the DOM animation feature set.
-6. Route children.
-7. A Sonner `Toaster`, positioned at the bottom-right with rich status colors.
+4. Route children.
+5. A Sonner `Toaster`, positioned at the bottom-right with rich status colors.
 
 The `QueryClient` and persister are each constructed in lazy `useState` initializers. This gives each mounted provider one stable instance rather than recreating clients on renders.
 
@@ -131,7 +129,7 @@ BoardApp
         ├── main
         │   ├── BoardFilters
         │   │   └── QueryBuilder (when expanded)
-        │   └── DndContext
+        │   └── DragDropProvider
         │       ├── TaskColumn: Todo
         │       ├── TaskColumn: In progress
         │       ├── TaskColumn: Done
@@ -409,17 +407,42 @@ Closing the sheet clears selection, draft, and conflict.
 
 ## 11. Drag-and-drop, ordering, and the status fallback
 
-`BoardExperience` configures dnd-kit with:
+`BoardExperience` uses the current dnd-kit React generation rather than the legacy
+`@dnd-kit/core` API:
 
-- a pointer sensor that requires 6 pixels of movement, reducing accidental drags;
-- a keyboard sensor using `sortableKeyboardCoordinates`;
-- `closestCenter` collision detection;
-- an overlay card during drag;
-- spoken announcements for pickup, movement, drop, and cancel.
+- `DragDropProvider` from `@dnd-kit/react` creates the shared drag manager and React context;
+- `PointerSensor` is reconfigured with a 6-pixel activation distance, while the provider keeps its default keyboard sensor;
+- `Accessibility` from `@dnd-kit/dom` supplies pickup, movement, drop, and cancel announcements;
+- `closestCenter` from `@dnd-kit/collision` is assigned to columns, while cards wrap it to exclude the active card from colliding with itself;
+- `DragOverlay` renders a visual card preview outside the virtual scroll containers.
 
-Each task card uses `useSortable`. The drag-handle button receives dnd-kit's attributes and listeners, is marked `touch-none`, and has a task-specific accessible label. The whole original card becomes partially transparent during dragging.
+The provider is required because `useSortable`, `useDroppable`, the sensors, the
+collision observer, and the overlay must all communicate through the same drag
+manager. It is scoped to the board rather than the whole application because no
+other route participates in this drag operation.
 
-Each column uses `useDroppable` with ID `column-<status>`, allowing a drop on empty column space as well as on a card.
+Each task card calls `useSortable` from `@dnd-kit/react/sortable` with a unique
+`id`, its current `index`, the status as its `group`, `type: "task"`, and
+`accept: "task"`. The returned `ref` connects the card element and `handleRef`
+connects only the grip. In this API generation there are no application-level
+`attributes`, `listeners`, `setNodeRef`, `SortableContext`, sorting strategy, or
+manual CSS transform to spread onto the element; the current hooks and DOM
+plugins own those details.
+
+Each column calls `useDroppable` from `@dnd-kit/react` with ID
+`column-<status>`, `type: "column"`, `accept: "task"`, and `data: {status}`.
+The hook does return a callback `ref`; the column merges it with TanStack
+Virtual's scroll ref. `isDropTarget` drives destination highlighting. A separate
+column droppable is necessary because an empty column has no sortable card to
+collide with.
+
+TanStack Virtual must remain the owner of row mounting and placement. The card
+therefore keeps `SortableKeyboardPlugin` but replaces the sortable plugin defaults
+so `OptimisticSortingPlugin` cannot physically reorder DOM nodes behind React's
+back. On drop, the board interprets `event.operation.source` and
+`event.operation.target`, calculates a fractional position, and commits one
+optimistic store update. This avoids duplicate virtual rows while preserving
+pointer and keyboard movement.
 
 ### Position calculation
 
@@ -740,9 +763,7 @@ The sticky header contains:
 
 The footer contains the owner name and mail, GitHub, and LinkedIn links. External profile links open in a new tab with `rel="noreferrer"`; brand icons are marked decorative where the text already supplies the accessible name.
 
-Theme colors are defined as OKLCH CSS variables in `app/globals.css`, with separate `:root` and `.dark` values. Tailwind's inline theme maps semantic utility names such as `bg-background`, `text-muted-foreground`, and `border-border` onto those variables. The stylesheet also defines radii, font mappings, selection color, a 320-pixel minimum body width, and pointer cursors for enabled button-like controls.
-
-Motion is used only for the drag overlay's scale/opacity entrance. `MotionConfig reducedMotion="user"` delegates to the user's operating-system preference.
+Theme colors are defined as OKLCH CSS variables in `app/globals.css`, with separate `:root` and `.dark` values. Plain CSS Modules consume semantic variables such as `var(--background)`, `var(--muted-foreground)`, and `var(--border)`. The global stylesheet also defines the reset, radii, font mappings, selection color, animation keyframes, a 320-pixel minimum body width, and reduced-motion overrides.
 
 Sonner reports successful dataset changes, mutation rollback, and remote activity. The remote toast includes a View action that selects the affected task.
 
@@ -785,9 +806,9 @@ Additional accessibility measures:
 
 ## 22. UI primitive layer
 
-`components.json` configures shadcn's Base Nova style, React Server Component compatibility, TypeScript, Tailwind CSS variables, neutral base color, Lucide icons, and `@/` aliases.
+`components.json` records the original shadcn Base Nova scaffold and aliases. The live component layer no longer depends on the shadcn CLI or Tailwind; each primitive imports its own `.module.css`.
 
-`lib/utils.ts` exposes `cn()`, which first conditionally composes classes with `clsx`, then resolves conflicting Tailwind utilities with `tailwind-merge`.
+`lib/utils.ts` exposes `cn()`, a small `clsx` wrapper for conditional CSS Module class composition. CSS declarations, rather than utility-string order, now resolve styling precedence.
 
 The UI directory is a project-owned component layer rather than calls to shadcn at runtime:
 
@@ -924,7 +945,7 @@ ESLint composes Next.js core-web-vitals and TypeScript rules. Generated Next/bui
 Verified current results:
 
 - unit tests: pass, 13/13;
-- end-to-end tests: pass, 16/16 across the original board and interview-guide suites when run serially;
+- end-to-end tests: pass, 16/16 across the board and interview-guide suites when run serially;
 - lint: exits successfully with one known TanStack Virtual/React Compiler warning;
 - production build: pass;
 - route `/`: statically prerendered.
@@ -974,13 +995,11 @@ No persistent server volume is required or useful: all application state is per-
 | TanStack Query + persist packages | Task query cache, mutations, cache persistence |
 | Zustand | Durable global client/workflow state |
 | Zod | Task and query runtime validation |
-| dnd-kit | Pointer/keyboard drag-and-drop and sortable behavior |
+| `@dnd-kit/react`, `@dnd-kit/dom`, `@dnd-kit/collision` | Current React provider/hooks, browser sensors/plugins, and collision algorithms |
 | TanStack Virtual | Per-column row virtualization |
 | Base UI | Accessible headless primitives behind the shadcn layer |
-| shadcn + CVA + clsx + tailwind-merge | UI scaffolding, variants, and class composition |
-| Tailwind CSS 4 + animation packages | Styling and theme utilities |
+| CSS Modules + CVA + clsx | Scoped plain CSS, typed variant mapping, and conditional class composition |
 | next-themes | system/light/dark class management |
-| Motion | reduced-motion-aware drag overlay animation |
 | Sonner | toast notifications |
 | Lucide React + React Icons | general and brand icons |
 | date-fns | Installed but not imported; dates currently use native `Intl.DateTimeFormat` |
@@ -996,9 +1015,10 @@ No persistent server volume is required or useful: all application state is per-
 | --- | --- |
 | `app/layout.tsx` | Root document, metadata, Geist fonts, global provider insertion |
 | `app/page.tsx` | `/` route that renders the board client boundary |
-| `app/providers.tsx` | Theme, query persistence, tooltip, motion, and toast providers |
+| `app/providers.tsx` | Theme, query persistence, tooltip, and toast providers |
 | `app/error.tsx` | Route-level unexpected render error UI and retry |
-| `app/globals.css` | Tailwind imports, semantic theme tokens, dark theme, base styles |
+| `app/globals.css` | Reset, semantic theme tokens, dark theme, keyframes, and base styles |
+| `**/*.module.css` | Component- and route-scoped plain CSS |
 | `app/favicon.ico` | Browser/site icon through App Router metadata convention |
 
 ### Board feature
@@ -1052,7 +1072,7 @@ No persistent server volume is required or useful: all application state is per-
 | `features/collaboration/network-status.tsx` | Browser/forced network state, offline banner, and reconnect feedback |
 | `features/collaboration/presence-indicators.tsx` | Accessible viewing/editing avatar summaries rendered on cards |
 | `features/collaboration/description-crdt.ts` | Deterministic sentence-block reconciliation for description conflicts |
-| `lib/utils.ts` | Tailwind-aware class-name composition |
+| `lib/utils.ts` | Conditional CSS Module class-name composition |
 
 ### Tests and configuration
 
@@ -1068,7 +1088,7 @@ No persistent server volume is required or useful: all application state is per-
 | `playwright.config.ts` | Chromium project, local dev server, base URL, failure traces |
 | `eslint.config.mjs` | Next core-web-vitals and TypeScript lint configuration |
 | `tsconfig.json` | Strict TypeScript and `@/` alias configuration |
-| `postcss.config.mjs` | Tailwind CSS 4 PostCSS plugin |
+| `postcss.config.mjs` | Empty extension point; no styling preprocessor is required |
 | `next.config.ts` | Conditional native standalone output for container builds |
 | `components.json` | shadcn style, aliases, CSS, and icon configuration |
 | `package.json` / `package-lock.json` | Node constraint, scripts, exact dependency graph |
@@ -1765,78 +1785,179 @@ The app is prerendered before the browser ref exists. Supplying deterministic ge
 
 ### The three layers
 
-1. `DndContext` owns sensors, collision detection, announcements, and drag lifecycle.
+1. `DragDropProvider` owns the drag manager, sensors, plugins, announcements, and lifecycle.
 2. Each column calls `useDroppable`.
 3. Each task card calls `useSortable`.
 
 ```ts
-const sensors = useSensors(
-  useSensor(PointerSensor, {
-    activationConstraint: { distance: 6 },
-  }),
-  useSensor(KeyboardSensor, {
-    coordinateGetter: sortableKeyboardCoordinates,
-  })
-)
+<DragDropProvider
+  sensors={(defaults) => [
+    ...defaults.filter((sensor) => sensor !== PointerSensor),
+    PointerSensor.configure({
+      activationConstraints: [
+        new PointerActivationConstraints.Distance({ value: 6 }),
+      ],
+    }),
+  ]}
+  plugins={(defaults) => defaults.map((plugin) => {
+    if (plugin === Accessibility) {
+      return Accessibility.configure({
+        id: "task-board-dnd",
+        announcements,
+      })
+    }
+    return plugin === Feedback
+      ? Feedback.configure({ dropAnimation: { duration: 0 } })
+      : plugin
+  })}
+  onDragEnd={onDragEnd}
+>
+  {board}
+</DragDropProvider>
 ```
 
-The pointer must move six pixels before a drag activates, which reduces accidental drags when the user intends to click the card. The keyboard sensor supplies an accessible spatial interaction.
+The function form receives the provider defaults. Filtering and re-adding only
+`PointerSensor` preserves the default keyboard sensor while changing pointer
+activation. Passing a plain array would replace all defaults. The pointer must
+move six pixels before activation, reducing accidental drags when the user means
+to click.
+
+`@dnd-kit/react` is the current React adapter and exports the provider, React
+hooks, overlay, and event types. `@dnd-kit/dom` supplies browser sensors and
+plugins. `@dnd-kit/collision` supplies collision algorithms. The previous
+`@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` imports belonged
+to the legacy API generation and were removed together; mixing the two
+generations creates incompatible contexts, hook contracts, and event shapes.
 
 ### Sortable card syntax
 
 ```ts
-const sortable = useSortable({
+const closestCenterExceptSource: CollisionDetector = (input) =>
+  input.droppable.id === input.dragOperation.source?.id
+    ? null
+    : closestCenter(input)
+
+const { ref, handleRef, isDragging } = useSortable({
   id: task.id,
+  index,
+  group: task.status,
+  type: "task",
+  accept: "task",
   data: { task },
   disabled: Boolean(lockedBy),
+  collisionDetector: closestCenterExceptSource,
+  transition: { duration: 0 },
+  plugins: [
+    SortableKeyboardPlugin,
+    Feedback.configure({ dropAnimation: { duration: 0 } }),
+  ],
 })
 
-const style = {
-  transform: CSS.Transform.toString(sortable.transform),
-  transition: sortable.transition,
-}
+return (
+  <div ref={ref} className={isDragging ? "opacity-30" : undefined}>
+    <Button ref={handleRef} aria-label={`Drag ${task.title}`}>
+      <GripVertical />
+    </Button>
+  </div>
+)
 ```
 
 The hook returns:
 
-- `setNodeRef` for the draggable/sortable element;
-- `setActivatorNodeRef`, `attributes`, and `listeners` for the handle;
-- a transform and transition during movement;
+- `ref` for the complete sortable element;
+- `handleRef` for the focused pointer/keyboard activator;
 - state such as `isDragging`.
 
-Keeping listeners on the grip handle lets the rest of the card remain clickable and interactive.
+`id` identifies the entity inside this provider. `index` describes its position
+inside `group`. The group is the task status, so dnd-kit understands that the
+three columns are separate sortable lists. `type` describes what is being
+dragged; `accept` describes what may land on the card.
+
+Keeping the handle ref on the grip lets the rest of the card remain clickable.
+`SortableKeyboardPlugin` keeps keyboard sorting. Omitting the default
+`OptimisticSortingPlugin` is deliberate: that plugin calls DOM insertion APIs,
+while TanStack Virtual and React own the virtual row DOM. Once that plugin is
+omitted, the active card remains in its original DOM position during the drag;
+`closestCenterExceptSource` prevents that card from continually winning its own
+collision. `Feedback` remains configured with a zero-duration drop so it cannot
+animate toward stale virtualized geometry.
 
 ### Droppable column syntax
 
 ```ts
-const droppable = useDroppable({
+const { ref, isDropTarget } = useDroppable({
   id: `column-${status}`,
+  type: "column",
+  accept: "task",
   data: { status },
+  collisionDetector: closestCenter,
+  collisionPriority: 0,
 })
+
+<div
+  ref={(node) => {
+    parentRef.current = node
+    ref(node)
+  }}
+/>
 ```
 
-The scroll container receives `droppable.setNodeRef`. `droppable.isOver` drives destination highlighting.
+The current hook returns `ref`; the legacy hook called the equivalent callback
+`setNodeRef`. The callback ref registers the committed DOM node and its geometry
+with the provider's drag manager. It is merged with `parentRef` because the same
+element is both the virtualizer scroll viewport and the column drop target.
+`isDropTarget` drives highlighting. Low collision priority makes mounted task
+cards win over their larger containing column.
 
 ### Drag lifecycle
 
 ```text
-onDragStart
-→ find active task
-→ render DragOverlay preview
+Space/Enter or 6px pointer movement
+→ provider creates operation.source
+→ collision detector updates operation.target
+→ DragOverlay reads source.data.task
 
 onDragEnd
-→ clear preview
-→ identify task under `active.id`
-→ resolve target task or target column from `over.id`
+→ ignore canceled or targetless operation
+→ find task from source.id
+→ resolve target task or column from target.id/data
 → compute status and position
 → execute optimistic update
 ```
 
-`DragOverlay dropAnimation={null}` prevents the overlay from animating back toward stale pre-update coordinates while the optimistic card has already moved columns.
+The overlay requests no drop animation, `Feedback` is configured with a
+zero-duration drop, and sortable cards use `transition: {duration: 0}`. In
+`@dnd-kit/react` 0.5.0, passing `transition: null` does not disable the default
+because the hook spreads that value into its default transition object. The
+explicit zero duration avoids movement toward stale virtual geometry. The grip
+and active card also set `user-select: none`, preventing the text-selection
+artifact visible in pointer drags.
+The overlay uses the provider's render callback, so no separate `activeTask`
+React state is required.
 
 ### Collision detection
 
-`closestCenter` chooses the droppable whose center is closest to the active rectangle's center. It is a practical board default, but dense lists, nested droppables, or unusual card sizes may need a custom collision strategy.
+`closestCenter` chooses the eligible droppable whose center is closest to the
+active rectangle's center. It is configured on registered targets in the current
+API rather than as one `DndContext` prop. `type`/`accept` first removes
+incompatible targets, and priority favors cards over columns. Dense lists,
+nested droppables, or unusual card sizes may still need a custom detector.
+
+### Why a provider if React already has refs?
+
+A ref only gives code a DOM node. It does not create sensors, measure all
+targets, run collision detection, hold the active operation, coordinate the
+overlay, or publish accessible announcements. `DragDropProvider` creates that
+shared subsystem; each hook registers one element with it through its returned
+ref.
+
+### Why not import `DragDropProvider` from `@dnd-kit/core`?
+
+There is no `DragDropProvider` export in the legacy core contract. The old root
+component was `DndContext`. The new package family deliberately places the React
+provider in `@dnd-kit/react`, while lower-level DOM behavior and collision
+algorithms live in focused packages. Every dnd-kit import in one interaction
+must come from the same generation.
 
 ### Fractional indexing
 
@@ -2156,33 +2277,36 @@ Base UI supplies interaction behavior and ARIA semantics; the project-owned shad
 Class Variance Authority models variant props:
 
 ```ts
-const buttonVariants = cva("base classes", {
+const buttonVariants = cva(styles.root, {
   variants: {
     variant: {
-      default: "default classes",
-      destructive: "destructive classes",
+      default: styles.default,
+      destructive: styles.destructive,
     },
   },
 })
 ```
 
-`cn()` combines:
+`cn()` delegates to `clsx`, allowing a base module class, a selected variant,
+consumer overrides, and conditional state classes to be combined without exposing
+global utility names.
 
-1. `clsx` for conditional class expressions;
-2. `tailwind-merge` so later conflicting Tailwind utilities win predictably.
+### CSS Modules and semantic tokens
 
-### Tailwind semantic tokens
+Components use locally scoped selectors:
 
-Components use names such as:
-
-```text
-bg-background
-text-foreground
-text-muted-foreground
-border-border
+```css
+.card {
+  color: var(--card-foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+}
 ```
 
-These map to CSS custom properties in `globals.css`. Theme switching changes variable values rather than requiring every component to branch between light and dark classes.
+Next.js hashes module selectors at build time, preventing accidental cross-feature
+class collisions. Theme switching changes the global semantic variable values,
+so component modules do not branch in React. Responsive rules, pseudo-classes,
+data attributes, and reduced-motion behavior live beside the component in CSS.
 
 ### Accessibility is a system
 
@@ -2203,7 +2327,9 @@ An interview answer should connect each measure to a user need. Saying “we use
 
 ### Motion
 
-`LazyMotion` loads the smaller DOM animation feature set, while `MotionConfig reducedMotion="user"` follows the operating-system preference. Motion is limited to drag feedback rather than applied indiscriminately.
+Transitions and keyframes are plain CSS inside the relevant modules. The global
+`prefers-reduced-motion: reduce` rule collapses animation and transition
+durations, so motion preference does not require a JavaScript animation runtime.
 
 ## 43. Testing strategy and how to defend it
 
@@ -2248,7 +2374,7 @@ If asked what you would add next:
 1. forced mutation failure preserves unrelated pending operations;
 2. reload resumes an operation exactly once;
 3. undo/redo failure restores the history cursor;
-4. same-column reorder and keyboard drag;
+4. same-column reorder and keyboard cancellation;
 5. conflict take-mine/take-theirs/non-description choices;
 6. a DOM-count assertion for the 1,000-task dataset;
 7. malformed URL and corrupted storage recovery;

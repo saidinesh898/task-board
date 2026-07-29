@@ -1,6 +1,6 @@
 # Thomson Reuters Board
 
-A real-time collaboration simulation built for the optional React assignment. It combines a polished shadcn/ui board with optimistic mutations, persistent undo/redo, virtualized columns, accessible drag-and-drop, and deterministic developer controls.
+A real-time collaboration simulation built for the optional React assignment. It combines a polished Base UI/CSS Modules board with optimistic mutations, persistent undo/redo, virtualized columns, accessible drag-and-drop, and deterministic developer controls.
 
 ## Run locally
 
@@ -57,7 +57,8 @@ standalone target, so the existing traced Next.js container remains available.
 - **Zustand** owns global client state: filters, selected task, drafts, Developer Tools, pending-operation metadata, and the 50-entry undo/redo history.
 - **The mock database** is the confirmed source of truth in `task-board:db:v1`. Query cache and client state use their own versioned local-storage keys.
 - **TanStack Virtual** gives each status column an independent virtual viewport. Stable task IDs, measured rows, and overscan keep the mounted DOM bounded in the 1,000-task mode.
-- **dnd-kit** handles pointer, touch, and keyboard movement. A DragOverlay avoids clipping inside the virtual scroll containers.
+- **dnd-kit's current React API** uses `DragDropProvider` for pointer and keyboard coordination, per-column sortable groups, typed drop acceptance, accessible announcements, and a `DragOverlay` that avoids clipping inside virtual scroll containers. Its DOM-reordering plugin is disabled so TanStack Virtual remains the only owner of virtual row placement; the card collision wrapper excludes the stationary source node.
+- **CSS Modules** own every component and route style. Tailwind utilities and its PostCSS/runtime dependencies were removed; the modules contain plain scoped CSS while `globals.css` owns reset rules and semantic theme variables.
 - **The advanced query engine** compiles a validated nested AND/OR tree into one predicate. The board applies it in the same memoized pass as quick filters, keeping query changes responsive with 1,000 tasks.
 
 The page remains a Next.js Server Component. Interactive providers and browser-only persistence begin at a focused client boundary.
@@ -122,7 +123,7 @@ Press `?` or select **Shortcuts** to see the complete reference. Key actions are
 - `Ctrl/Cmd+Shift+Z` — redo
 - `Tab`, `Space/Enter`, arrow keys, `Esc` — keyboard drag-and-drop
 
-Cards expose saving state through `aria-busy`; drag actions have screen-reader announcements; dialogs restore focus; motion respects the system reduced-motion preference; and status changes are also available without dragging.
+Cards expose saving state through `aria-busy`; drag actions have screen-reader announcements; dialogs restore focus; CSS animations respect the system reduced-motion preference; and status changes are also available without dragging.
 
 ## Performance notes
 

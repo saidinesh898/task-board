@@ -1,0 +1,46 @@
+.style1 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing, 0.25rem) * 1.5);
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.style2 {
+  background-color: var(--color-amber-100, oklch(96.2% 0.059 95.617));
+  color: var(--color-amber-800, oklch(47.3% 0.137 46.201));
+  &:is(.dark *) {
+    background-color: var(--color-amber-950, oklch(27.9% 0.077 45.635));
+  }
+  &:is(.dark *) {
+    color: var(--color-amber-200, oklch(92.4% 0.12 95.746));
+  }
+}
+.style3 {
+  background-color: var(--primary);
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--primary) 10%, transparent);
+  }
+  color: var(--primary);
+}
+.style4 {
+  background-color: var(--color-amber-500, oklch(76.9% 0.188 70.08));
+}
+.style5 {
+  background-color: var(--color-emerald-500, oklch(69.6% 0.17 162.48));
+}
+.style6 {
+  width: calc(var(--spacing, 0.25rem) * 6);
+  height: calc(var(--spacing, 0.25rem) * 6);
+  font-size: 10px;
+}
+.style7 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}

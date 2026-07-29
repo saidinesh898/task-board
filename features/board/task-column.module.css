@@ -1,0 +1,100 @@
+.style1 {
+  display: flex;
+  height: calc(100vh - 17.5rem);
+  min-height: 420px;
+  width: 88vw;
+  flex-shrink: 0;
+  flex-direction: column;
+  border-radius: calc(var(--radius) * 1.8);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  background-color: var(--muted);
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--muted) 35%, transparent);
+  }
+  @media (width >= 40rem) {
+    width: 420px;
+  }
+  @media (width >= 64rem) {
+    width: auto;
+  }
+  @media (width >= 64rem) {
+    min-width: 0px;
+  }
+}
+.style2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+  padding-inline: calc(var(--spacing, 0.25rem) * 4);
+  padding-block: calc(var(--spacing, 0.25rem) * 3);
+}
+.style3 {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing, 0.25rem) * 2);
+}
+.style4 {
+  width: calc(var(--spacing, 0.25rem) * 2);
+  height: calc(var(--spacing, 0.25rem) * 2);
+  border-radius: calc(infinity * 1px);
+}
+.style5 {
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  --tw-font-weight: var(--font-weight-semibold, 600);
+  font-weight: var(--font-weight-semibold, 600);
+}
+.style6 {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(var(--spacing, 0.25rem) * 3);
+}
+.style7 {
+  background-color: var(--primary);
+  @supports (color: color-mix(in lab, red, red)) {
+    background-color: color-mix(in oklab, var(--primary) 5%, transparent);
+  }
+}
+.style8 {
+  display: flex;
+  height: calc(var(--spacing, 0.25rem) * 32);
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--radius) * 1.4);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  --tw-border-style: dashed;
+  border-style: dashed;
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  color: var(--muted-foreground);
+}
+.style9 {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  padding-bottom: calc(var(--spacing, 0.25rem) * 3);
+}
+.dotTodo {
+  background-color: var(--color-slate-400, oklch(70.4% 0.04 256.788));
+}
+.dotInProgress {
+  background-color: var(--color-amber-500, oklch(76.9% 0.188 70.08));
+}
+.dotDone {
+  background-color: var(--color-emerald-500, oklch(69.6% 0.17 162.48));
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}

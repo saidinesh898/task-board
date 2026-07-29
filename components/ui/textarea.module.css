@@ -1,0 +1,165 @@
+.style1 {
+  display: flex;
+  field-sizing: content;
+  min-height: calc(var(--spacing, 0.25rem) * 16);
+  width: 100%;
+  border-radius: var(--radius);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--input);
+  background-color: transparent;
+  padding-inline: calc(var(--spacing, 0.25rem) * 2.5);
+  padding-block: calc(var(--spacing, 0.25rem) * 2);
+  font-size: var(--text-base, 1rem);
+  line-height: var(--tw-leading, var(--text-base--line-height, calc(1.5 / 1)));
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)));
+  transition-duration: var(--tw-duration, var(--default-transition-duration, 150ms));
+  --tw-outline-style: none;
+  outline-style: none;
+  &::placeholder {
+    color: var(--muted-foreground);
+  }
+  &:focus-visible {
+    border-color: var(--ring);
+  }
+  &:focus-visible {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  &:focus-visible {
+    --tw-ring-color: var(--ring);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--ring) 50%, transparent);
+    }
+  }
+  &:disabled {
+    cursor: not-allowed;
+  }
+  &:disabled {
+    background-color: var(--input);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--input) 50%, transparent);
+    }
+  }
+  &:disabled {
+    opacity: 50%;
+  }
+  &[aria-invalid="true"] {
+    border-color: var(--destructive);
+  }
+  &[aria-invalid="true"] {
+    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  &[aria-invalid="true"] {
+    --tw-ring-color: var(--destructive);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+    }
+  }
+  @media (width >= 48rem) {
+    font-size: var(--text-sm, 0.875rem);
+    line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  }
+  &:is(.dark *) {
+    background-color: var(--input);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--input) 30%, transparent);
+    }
+  }
+  &:is(.dark *) {
+    &:disabled {
+      background-color: var(--input);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--input) 80%, transparent);
+      }
+    }
+  }
+  &:is(.dark *) {
+    &[aria-invalid="true"] {
+      border-color: var(--destructive);
+      @supports (color: color-mix(in lab, red, red)) {
+        border-color: color-mix(in oklab, var(--destructive) 50%, transparent);
+      }
+    }
+  }
+  &:is(.dark *) {
+    &[aria-invalid="true"] {
+      --tw-ring-color: var(--destructive);
+      @supports (color: color-mix(in lab, red, red)) {
+        --tw-ring-color: color-mix(in oklab, var(--destructive) 40%, transparent);
+      }
+    }
+  }
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-inset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-ring-inset {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-offset-width {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --tw-ring-offset-color {
+  syntax: "*";
+  inherits: false;
+  initial-value: #fff;
+}
+@property --tw-ring-offset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}

@@ -1,8 +1,10 @@
 "use client"
 
 import { memo } from "react"
-import { useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { useSortable } from "@dnd-kit/react/sortable"
+import { Feedback } from "@dnd-kit/dom"
+import { SortableKeyboardPlugin } from "@dnd-kit/dom/sortable"
+import { closestCenter, type CollisionDetector } from "@dnd-kit/collision"
 import { CalendarDays, CircleUserRound, GripVertical, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,64 +15,78 @@ import { STATUS_LABELS, STATUSES, type PresenceEntry, type Task } from "@/featur
 import { useBoardStore } from "@/stores/board-store"
 import { formatTaskDate } from "@/features/tasks/format"
 import { PresenceIndicators } from "@/features/collaboration/presence-indicators"
+import styles from "./task-card.module.css"
 
 const priorityStyle = {
-  high: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300",
-  medium: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300",
-  low: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300",
+  high: styles.priorityHigh,
+  medium: styles.priorityMedium,
+  low: styles.priorityLow,
 }
 
-export const TaskCard = memo(function TaskCard({ task, pending, onStatusChange, presence = [], lockedBy }: {
+const closestCenterExceptSource: CollisionDetector = (input) =>
+  input.droppable.id === input.dragOperation.source?.id ? null : closestCenter(input)
+
+export const TaskCard = memo(function TaskCard({ task, index, group, pending, onStatusChange, presence = [], lockedBy }: {
   task: Task
+  index: number
+  group: Task["status"]
   pending: boolean
   onStatusChange: (task: Task, status: Task["status"]) => void
   presence?: PresenceEntry[]
   lockedBy?: string
 }) {
   const setSelected = useBoardStore((state) => state.setSelectedTaskId)
-  const sortable = useSortable({ id: task.id, data: { task }, disabled: Boolean(lockedBy) })
-  const style = { transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition }
+  const { ref, handleRef, isDragging } = useSortable({
+    id: task.id,
+    index,
+    group,
+    type: "task",
+    accept: "task",
+    data: { task },
+    disabled: Boolean(lockedBy),
+    collisionDetector: closestCenterExceptSource,
+    transition: { duration: 0 },
+    plugins: [SortableKeyboardPlugin, Feedback.configure({ dropAnimation: { duration: 0 } })],
+  })
   return (
-    <div ref={sortable.setNodeRef} style={style} className={cn(sortable.isDragging && "opacity-30")}>
+    <div ref={ref} className={cn(isDragging && styles.dragging)}>
       <Card
         aria-busy={pending}
-        className="group gap-0 overflow-hidden border-border/70 py-0 shadow-sm transition-[box-shadow,border-color] hover:border-foreground/20 hover:shadow-md"
+        className={styles.style1}
       >
-        <CardContent className="p-3.5">
-          <div className="flex items-start gap-2">
+        <CardContent className={styles.style2}>
+          <div className={styles.style3}>
             <Button
-              ref={sortable.setActivatorNodeRef}
-              {...sortable.attributes}
-              {...sortable.listeners}
+              ref={handleRef}
               variant="ghost"
               size="icon-sm"
-              className="-ml-2 mt-[-3px] shrink-0 touch-none text-muted-foreground opacity-60 group-hover:opacity-100"
+              className={cn(styles.style4, styles.dragHandle)}
               aria-label={lockedBy ? `${task.title} is locked by ${lockedBy}` : `Drag ${task.title}`}
               disabled={Boolean(lockedBy)}
             ><GripVertical /></Button>
-            <button className="min-w-0 flex-1 text-left" onClick={() => setSelected(task.id)}>
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="line-clamp-2 text-sm font-semibold leading-5">{task.title}</h3>
-                {pending && <Loader2 className="mt-0.5 size-3.5 shrink-0 animate-spin text-primary" aria-label="Saving" />}
+            <button className={styles.style5} onClick={() => setSelected(task.id)}>
+              <div className={styles.style6}>
+                <h3 className={styles.style7}>{task.title}</h3>
+                {pending && <Loader2 className={styles.style8} aria-label="Saving" />}
               </div>
-              <p className="mt-1 line-clamp-2 text-xs leading-4 text-muted-foreground">{task.description}</p>
+              <p className={styles.style9}>{task.description}</p>
             </button>
           </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <Badge variant="outline" className={cn("capitalize", priorityStyle[task.priority])}>{task.priority}</Badge>
+          <div className={styles.style10}>
+            <Badge variant="outline" className={cn(styles.style11, priorityStyle[task.priority])}>{task.priority}</Badge>
             {task.tags.slice(0, 2).map((tag) => <Badge variant="secondary" key={tag}>{tag}</Badge>)}
           </div>
-          <div className="mt-2 flex min-h-6 items-center justify-between gap-2">
+          <div className={styles.style12}>
             <PresenceIndicators entries={presence} />
-            {lockedBy && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">Locked by {lockedBy}</span>}
+            {lockedBy && <span className={styles.style13}>Locked by {lockedBy}</span>}
           </div>
-          <div className="mt-3 flex items-center justify-between gap-2 border-t pt-2.5 text-[11px] text-muted-foreground">
-            <span className="flex min-w-0 items-center gap-1"><CircleUserRound className="size-3.5" /><span className="truncate">{task.assignee}</span></span>
-            <span className="flex shrink-0 items-center gap-1" title={formatTaskDate(task.createdAt, true)}><CalendarDays className="size-3.5" />{formatTaskDate(task.createdAt)}</span>
+          <div className={styles.style14}>
+            <span className={styles.style15}><CircleUserRound className={styles.style16} /><span className={styles.style17}>{task.assignee}</span></span>
+            <span className={styles.style18} title={formatTaskDate(task.createdAt, true)}><CalendarDays className={styles.style16} />{formatTaskDate(task.createdAt)}</span>
           </div>
-          <div className="mt-2">
+          <div className={styles.style19}>
             <Select items={STATUS_LABELS} disabled={Boolean(lockedBy)} value={task.status} onValueChange={(status) => status && onStatusChange(task, status)}>
-              <SelectTrigger className="h-7 w-full text-xs" aria-label={`Change status for ${task.title}`}><SelectValue /></SelectTrigger>
+              <SelectTrigger className={styles.style20} aria-label={`Change status for ${task.title}`}><SelectValue /></SelectTrigger>
               <SelectContent>{STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent>
             </Select>
           </div>
@@ -79,3 +95,28 @@ export const TaskCard = memo(function TaskCard({ task, pending, onStatusChange, 
     </div>
   )
 })
+
+export function TaskDragPreview({ task, pending }: { task: Task; pending: boolean }) {
+  return (
+    <Card aria-busy={pending} className={styles.style21}>
+      <CardContent className={styles.style2}>
+        <div className={styles.style3}>
+          <div className={styles.style22}>
+            <GripVertical className={styles.style23} />
+          </div>
+          <div className={styles.style24}>
+            <div className={styles.style6}>
+              <h3 className={styles.style7}>{task.title}</h3>
+              {pending && <Loader2 className={styles.style8} aria-label="Saving" />}
+            </div>
+            <p className={styles.style9}>{task.description}</p>
+          </div>
+        </div>
+        <div className={styles.style10}>
+          <Badge variant="outline" className={cn(styles.style11, priorityStyle[task.priority])}>{task.priority}</Badge>
+          {task.tags.slice(0, 2).map((tag) => <Badge variant="secondary" key={tag}>{tag}</Badge>)}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

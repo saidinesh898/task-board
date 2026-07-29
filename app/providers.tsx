@@ -5,7 +5,6 @@ import { QueryClient } from "@tanstack/react-query"
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client"
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister"
 import { ThemeProvider } from "next-themes"
-import { LazyMotion, MotionConfig, domAnimation } from "motion/react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -39,9 +38,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: "v1" }}>
         <TooltipProvider>
-          <MotionConfig reducedMotion="user">
-            <LazyMotion features={domAnimation}>{children}</LazyMotion>
-          </MotionConfig>
+          {children}
           <Toaster position="bottom-right" richColors />
         </TooltipProvider>
       </PersistQueryClientProvider>

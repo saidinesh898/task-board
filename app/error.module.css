@@ -1,0 +1,41 @@
+.style1 {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: calc(var(--spacing, 0.25rem) * 6);
+}
+.style2 {
+  max-width: var(--container-md, 28rem);
+  :where(& > :not(:last-child)) {
+    --tw-space-y-reverse: 0;
+    margin-block-start: calc(calc(var(--spacing, 0.25rem) * 4) * var(--tw-space-y-reverse));
+    margin-block-end: calc(calc(var(--spacing, 0.25rem) * 4) * calc(1 - var(--tw-space-y-reverse)));
+  }
+  text-align: center;
+}
+.style3 {
+  margin-inline: auto;
+  width: calc(var(--spacing, 0.25rem) * 10);
+  height: calc(var(--spacing, 0.25rem) * 10);
+  color: var(--destructive);
+}
+.style4 {
+  font-size: var(--text-2xl, 1.5rem);
+  line-height: var(--tw-leading, var(--text-2xl--line-height, calc(2 / 1.5)));
+  --tw-font-weight: var(--font-weight-semibold, 600);
+  font-weight: var(--font-weight-semibold, 600);
+}
+.style5 {
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  color: var(--muted-foreground);
+}
+@property --tw-space-y-reverse {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}

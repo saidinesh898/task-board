@@ -6,6 +6,7 @@ import { useBoardStore } from "@/stores/board-store"
 import { useTaskOperations } from "@/features/tasks/task-operations"
 import type { TaskDraft } from "@/features/tasks/types"
 import { emptyDraft, TaskForm } from "./task-form"
+import styles from "./create-task-dialog.module.css"
 
 export function CreateTaskDialog() {
   const open = useBoardStore((state) => state.createOpen)
@@ -27,7 +28,7 @@ export function CreateTaskDialog() {
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className={styles.style1}>
         <DialogHeader><DialogTitle>Create a task</DialogTitle><DialogDescription>Add it now; the simulated API confirms it in two seconds.</DialogDescription></DialogHeader>
         <TaskForm value={draft} onChange={(patch) => setDraft((value) => ({ ...value, ...patch }))} onSubmit={create} submitLabel="Create task" />
       </DialogContent>

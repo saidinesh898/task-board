@@ -1,0 +1,74 @@
+.style1 {
+  max-height: 85vh;
+  overflow-y: auto;
+  @media (width >= 40rem) {
+    max-width: var(--container-xl, 36rem);
+  }
+}
+:where(.style2 > :not(:last-child)) {
+  --tw-space-y-reverse: 0;
+  margin-block-start: calc(calc(var(--spacing, 0.25rem) * 2) * var(--tw-space-y-reverse));
+  margin-block-end: calc(calc(var(--spacing, 0.25rem) * 2) * calc(1 - var(--tw-space-y-reverse)));
+}
+.style3 {
+  font-size: var(--text-xs, 0.75rem);
+  line-height: var(--tw-leading, var(--text-xs--line-height, calc(1 / 0.75)));
+  --tw-font-weight: var(--font-weight-semibold, 600);
+  font-weight: var(--font-weight-semibold, 600);
+  --tw-tracking: var(--tracking-wider, 0.05em);
+  letter-spacing: var(--tracking-wider, 0.05em);
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+.style4 {
+  :where(& > :not(:last-child)) {
+    --tw-divide-y-reverse: 0;
+    border-bottom-style: var(--tw-border-style);
+    border-top-style: var(--tw-border-style);
+    border-top-width: calc(1px * var(--tw-divide-y-reverse));
+    border-bottom-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));
+  }
+  border-radius: calc(var(--radius) * 1.4);
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  background-color: var(--card);
+}
+.style5 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing, 0.25rem) * 4);
+  padding-inline: calc(var(--spacing, 0.25rem) * 3);
+  padding-block: calc(var(--spacing, 0.25rem) * 2.5);
+}
+.style6 {
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+}
+.style7 {
+  flex-shrink: 0;
+  font-family: var(--font-geist-mono);
+}
+@property --tw-space-y-reverse {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-tracking {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-divide-y-reverse {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}

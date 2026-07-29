@@ -1,0 +1,253 @@
+.style1 {
+  position: relative;
+  display: flex;
+  width: calc(var(--spacing, 0.25rem) * 8);
+  height: calc(var(--spacing, 0.25rem) * 8);
+  flex-shrink: 0;
+  border-radius: calc(infinity * 1px);
+  -webkit-user-select: none;
+  user-select: none;
+  &::after {
+    content: var(--tw-content);
+    position: absolute;
+  }
+  &::after {
+    content: var(--tw-content);
+    inset: 0px;
+  }
+  &::after {
+    content: var(--tw-content);
+    border-radius: calc(infinity * 1px);
+  }
+  &::after {
+    content: var(--tw-content);
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  &::after {
+    content: var(--tw-content);
+    border-color: var(--border);
+  }
+  &::after {
+    content: var(--tw-content);
+    mix-blend-mode: darken;
+  }
+  &[data-size="lg"] {
+    width: calc(var(--spacing, 0.25rem) * 10);
+    height: calc(var(--spacing, 0.25rem) * 10);
+  }
+  &[data-size="sm"] {
+    width: calc(var(--spacing, 0.25rem) * 6);
+    height: calc(var(--spacing, 0.25rem) * 6);
+  }
+  &:is(.dark *) {
+    &::after {
+      content: var(--tw-content);
+      mix-blend-mode: lighten;
+    }
+  }
+}
+.style2 {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(infinity * 1px);
+  object-fit: cover;
+}
+.style3 {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(infinity * 1px);
+  background-color: var(--muted);
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  color: var(--muted-foreground);
+  &:is(:where(.group\/avatar)[data-size="sm"] *) {
+    font-size: var(--text-xs, 0.75rem);
+    line-height: var(--tw-leading, var(--text-xs--line-height, calc(1 / 0.75)));
+  }
+}
+.style4 {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(infinity * 1px);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  background-blend-mode: color;
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-color: var(--background);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.style5:is(:where(.group\/avatar)[data-size="sm"] *) {
+  width: calc(var(--spacing, 0.25rem) * 2);
+  height: calc(var(--spacing, 0.25rem) * 2);
+}
+.style5:is(:where(.group\/avatar)[data-size="sm"] *) > svg {
+  display: none;
+}
+.style6:is(:where(.group\/avatar)[data-size="default"] *) {
+  width: calc(var(--spacing, 0.25rem) * 2.5);
+  height: calc(var(--spacing, 0.25rem) * 2.5);
+}
+.style6:is(:where(.group\/avatar)[data-size="default"] *) > svg {
+  width: calc(var(--spacing, 0.25rem) * 2);
+  height: calc(var(--spacing, 0.25rem) * 2);
+}
+.style7:is(:where(.group\/avatar)[data-size="lg"] *) {
+  width: calc(var(--spacing, 0.25rem) * 3);
+  height: calc(var(--spacing, 0.25rem) * 3);
+}
+.style7:is(:where(.group\/avatar)[data-size="lg"] *) > svg {
+  width: calc(var(--spacing, 0.25rem) * 2);
+  height: calc(var(--spacing, 0.25rem) * 2);
+}
+.style8 {
+  display: flex;
+  :where(& > :not(:last-child)) {
+    --tw-space-x-reverse: 0;
+    margin-inline-start: calc(calc(var(--spacing, 0.25rem) * -2) * var(--tw-space-x-reverse));
+    margin-inline-end: calc(calc(var(--spacing, 0.25rem) * -2) * calc(1 - var(--tw-space-x-reverse)));
+  }
+  :is(& > *) {
+    &[data-slot="avatar"] {
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  :is(& > *) {
+    &[data-slot="avatar"] {
+      --tw-ring-color: var(--background);
+    }
+  }
+}
+.style9 {
+  position: relative;
+  display: flex;
+  width: calc(var(--spacing, 0.25rem) * 8);
+  height: calc(var(--spacing, 0.25rem) * 8);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(infinity * 1px);
+  background-color: var(--muted);
+  font-size: var(--text-sm, 0.875rem);
+  line-height: var(--tw-leading, var(--text-sm--line-height, calc(1.25 / 0.875)));
+  color: var(--muted-foreground);
+  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  --tw-ring-color: var(--background);
+  &:is(:where(.group\/avatar-group):has(*[data-size="lg"]) *) {
+    width: calc(var(--spacing, 0.25rem) * 10);
+    height: calc(var(--spacing, 0.25rem) * 10);
+  }
+  &:is(:where(.group\/avatar-group):has(*[data-size="sm"]) *) {
+    width: calc(var(--spacing, 0.25rem) * 6);
+    height: calc(var(--spacing, 0.25rem) * 6);
+  }
+  &>svg {
+    width: calc(var(--spacing, 0.25rem) * 4);
+    height: calc(var(--spacing, 0.25rem) * 4);
+  }
+  &:is(:where(.group\/avatar-group):has(*[data-size="lg"]) *) {
+    &>svg {
+      width: calc(var(--spacing, 0.25rem) * 5);
+      height: calc(var(--spacing, 0.25rem) * 5);
+    }
+  }
+  &:is(:where(.group\/avatar-group):has(*[data-size="sm"]) *) {
+    &>svg {
+      width: calc(var(--spacing, 0.25rem) * 3);
+      height: calc(var(--spacing, 0.25rem) * 3);
+    }
+  }
+}
+@property --tw-content {
+  syntax: "*";
+  initial-value: "";
+  inherits: false;
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-inset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-shadow-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-shadow-alpha {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --tw-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-inset-ring-color {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-inset-ring-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-ring-inset {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-ring-offset-width {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --tw-ring-offset-color {
+  syntax: "*";
+  inherits: false;
+  initial-value: #fff;
+}
+@property --tw-ring-offset-shadow {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+@property --tw-space-x-reverse {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0;
+}

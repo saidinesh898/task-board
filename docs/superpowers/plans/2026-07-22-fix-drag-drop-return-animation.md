@@ -60,7 +60,7 @@ Expected: FAIL because dnd-kit's 250 ms default drop animation sets `data-drop-a
     <m.div
       initial={{ scale: .98, opacity: .7 }}
       animate={{ scale: 1.02, opacity: 1 }}
-      className="w-[360px] rotate-1 shadow-2xl"
+      className={styles.dragPreview}
     >
       <TaskCard task={activeTask} pending={pendingIds.has(activeTask.id)} onStatusChange={moveTask} />
     </m.div>

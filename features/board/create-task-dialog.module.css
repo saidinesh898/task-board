@@ -1,0 +1,5 @@
+@media (width >= 40rem) {
+  .style1 {
+    max-width: var(--container-lg, 32rem);
+  }
+}
