@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://board-systems-lab-sai.saidinesh898.chatgpt.site"),
   title: "Thomson Reuters Board · Collaborative tasks",
-  description: "A high-performance collaborative task board and interactive React systems interview guide.",
+  description: "A high-performance collaborative task board.",
   openGraph: {
     type: "website",
     url: "/",

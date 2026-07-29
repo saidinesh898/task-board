@@ -1,9 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { useTheme } from "next-themes"
 import {
-  BookOpenCheck,
   Keyboard,
   Laptop,
   Mail,
@@ -118,18 +116,6 @@ export function BoardHeader({
             Keyboard Shortcuts
           </span>
           <span className={styles.shortcutKey}>?</span>
-        </Button>
-
-        <Button
-          variant="outline"
-          nativeButton={false}
-          render={<Link href="/interview-guide" />}
-          aria-label="Open interview guide"
-        >
-          <BookOpenCheck />
-          <span className={styles.desktopLabel}>
-            Interview guide
-          </span>
         </Button>
 
         <DropdownMenu>
