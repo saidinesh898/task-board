@@ -235,26 +235,31 @@ Remember:
 ## 8. dnd-kit
 
 ```text
-DndContext
-├── PointerSensor: 6px activation distance
-├── KeyboardSensor: sortableKeyboardCoordinates
-├── closestCenter collision
-├── announcements
-└── drag start/end/cancel
-```
+DragDropProvider (@dnd-kit/react)
+├── PointerSensor.configure: 6px activation distance
+├── default keyboard sensor
+├── Accessibility announcements
+└── source/target drag operation lifecycle
 
-```text
-useDroppable → status column
-useSortable  → task card
-DragOverlay  → visual preview
+useDroppable (@dnd-kit/react)          → column ref + isDropTarget
+useSortable  (@dnd-kit/react/sortable) → card ref + handleRef
+closestCenter (@dnd-kit/collision)      → per-target collision detector
+DragOverlay   (@dnd-kit/react)          → visual preview
 ```
 
 Key answers:
 
-- Listeners live on the grip so the card body remains clickable.
+- The provider is required shared context: refs register DOM nodes, while the provider owns sensors, measurements, collisions, the active operation, overlay coordination, and announcements.
+- The current `useDroppable` does return `ref`; merge it with the virtual scroll ref on the same column element.
+- `id` is globally unique in the provider, `index` is the card position, `group` is the status column, `type` describes the dragged entity, and `accept` filters legal targets.
+- `handleRef` lives on the grip so the card body remains clickable.
+- `SortableKeyboardPlugin` stays enabled, but `OptimisticSortingPlugin` is omitted because direct DOM reordering conflicts with TanStack Virtual's React-owned rows.
+- Because the source DOM stays in place, the card's collision wrapper excludes `source.id`; otherwise the source card can keep winning `closestCenter`.
+- `Feedback` and the overlay use zero-duration drop behavior to avoid stale virtual-geometry return animation.
 - `dropAnimation={null}` avoids animation toward stale source geometry.
 - Locks disable sortable behavior and are rechecked in the command.
 - The status select is the accessible/non-spatial fallback.
+- `@dnd-kit/core`/`sortable`/`utilities` are the legacy generation; do not mix them with `@dnd-kit/react`/`dom`/`collision`.
 
 ## 9. Query builder
 

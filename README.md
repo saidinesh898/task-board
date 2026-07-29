@@ -57,7 +57,7 @@ standalone target, so the existing traced Next.js container remains available.
 - **Zustand** owns global client state: filters, selected task, drafts, Developer Tools, pending-operation metadata, and the 50-entry undo/redo history.
 - **The mock database** is the confirmed source of truth in `task-board:db:v1`. Query cache and client state use their own versioned local-storage keys.
 - **TanStack Virtual** gives each status column an independent virtual viewport. Stable task IDs, measured rows, and overscan keep the mounted DOM bounded in the 1,000-task mode.
-- **dnd-kit** handles pointer, touch, and keyboard movement. A DragOverlay avoids clipping inside the virtual scroll containers.
+- **dnd-kit's current React API** uses `DragDropProvider` for pointer and keyboard coordination, per-column sortable groups, typed drop acceptance, accessible announcements, and a `DragOverlay` that avoids clipping inside virtual scroll containers. Its DOM-reordering plugin is disabled so TanStack Virtual remains the only owner of virtual row placement; the card collision wrapper excludes the stationary source node.
 - **The advanced query engine** compiles a validated nested AND/OR tree into one predicate. The board applies it in the same memoized pass as quick filters, keeping query changes responsive with 1,000 tasks.
 
 The page remains a Next.js Server Component. Interactive providers and browser-only persistence begin at a focused client boundary.

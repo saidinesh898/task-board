@@ -14,8 +14,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://board-systems-lab-sai.saidinesh898.chatgpt.site"),
   title: "Thomson Reuters Board · Collaborative tasks",
-  description: "A high-performance optimistic collaborative task board",
+  description: "A high-performance collaborative task board and interactive React systems interview guide.",
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Board Systems Lab",
+    title: "Board Systems Lab · React task board",
+    description: "Explore the architecture, patterns, and code behind a virtualized collaborative React task board.",
+    images: [{
+      url: "/og.png",
+      width: 1744,
+      height: 909,
+      alt: "Board Systems Lab with an illustrated three-column task board",
+    }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Board Systems Lab · React task board",
+    description: "Interactive React architecture lessons, dnd-kit, and TanStack Virtual.",
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({

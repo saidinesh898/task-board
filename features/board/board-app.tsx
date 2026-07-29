@@ -1,9 +1,8 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core"
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable"
-import * as m from "motion/react-m"
+import { useCallback, useMemo } from "react"
+import { DragDropProvider, DragOverlay, type DragEndEvent, type DragOverEvent, type DragStartEvent } from "@dnd-kit/react"
+import { Accessibility, Feedback, PointerActivationConstraints, PointerSensor } from "@dnd-kit/dom"
 import { useTheme } from "next-themes"
 import { BookOpenCheck, Keyboard, Laptop, Mail, Moon, Plus, Redo2, Sun, Undo2, Zap } from "lucide-react"
 import Link from "next/link"
@@ -21,7 +20,7 @@ import { ShortcutsDialog } from "@/features/keyboard-shortcuts/shortcuts-dialog"
 import { useKeyboardShortcuts } from "@/features/keyboard-shortcuts/use-keyboard-shortcuts"
 import { BoardFilters } from "./board-filters"
 import { TaskColumn } from "./task-column"
-import { TaskCard } from "./task-card"
+import { TaskDragPreview } from "./task-card"
 import { CreateTaskDialog } from "./create-task-dialog"
 import { TaskDetailsSheet } from "./task-details-sheet"
 import { filterTasks } from "@/features/tasks/selectors"
@@ -44,8 +43,6 @@ function BoardExperience() {
   const activeUser = useBoardStore((state) => state.activeUser)
   const setCreateOpen = useBoardStore((state) => state.setCreateOpen)
   const setShortcutsOpen = useBoardStore((state) => state.setShortcutsOpen)
-  const [activeTask, setActiveTask] = useState<Task | null>(null)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }))
   useKeyboardShortcuts({ undo, redo })
   useQueryUrlSync()
 
@@ -82,15 +79,15 @@ function BoardExperience() {
     execute(task, { ...task, status, position }, status === task.status ? `Reorder “${task.title}”` : `Move “${task.title}” to ${status}`, { kind: "update" })
   }, [execute, lockedByTask, tasks])
   const onDragEnd = (event: DragEndEvent) => {
-    setActiveTask(null)
-    if (!event.over) return
-    const task = tasks.find((item) => item.id === event.active.id)
+    if (event.canceled) return
+    const { source, target } = event.operation
+    if (!source || !target) return
+    const task = tasks.find((item) => item.id === source.id)
     if (!task) return
-    const overTask = tasks.find((item) => item.id === event.over!.id)
-    const status = (overTask?.status ?? String(event.over.id).replace("column-", "")) as TaskStatus
+    const overTask = tasks.find((item) => item.id === target.id)
+    const status = (overTask?.status ?? target.data.status ?? String(target.id).replace("column-", "")) as TaskStatus
     if (STATUSES.includes(status)) moveTask(task, status, overTask)
   }
-  const onDragStart = (event: DragStartEvent) => setActiveTask(tasks.find((task) => task.id === event.active.id) ?? null)
 
   return <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,var(--color-muted),transparent_35%)]">
     <AppHeader undo={undo} redo={redo} undoLabel={past.at(-1)?.label} redoLabel={future.at(-1)?.label} onCreate={() => setCreateOpen(true)} onShortcuts={() => setShortcutsOpen(true)} />
@@ -99,10 +96,40 @@ function BoardExperience() {
     <main className="mx-auto max-w-[1600px] space-y-4 px-4 py-5 sm:px-6">
       <div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Thomson Reuters Board</h1><p className="mt-1 text-sm text-muted-foreground">Optimistic, collaborative, and designed to stay fast at 1,000+ tasks.</p></div>
       <BoardFilters resultCount={filtered.length} totalCount={tasks.length} />
-      {isLoading ? <LoadingBoard /> : <DndContext id="task-board-dnd" sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveTask(null)} accessibility={{ announcements: { onDragStart: ({ active }) => `Picked up ${tasks.find((task) => task.id === active.id)?.title}`, onDragOver: ({ over }) => over ? `Over ${over.id}` : undefined, onDragEnd: () => "Task dropped", onDragCancel: () => "Drag cancelled" } }}>
+      {isLoading ? <LoadingBoard /> : <DragDropProvider
+        sensors={(defaults) => [
+          ...defaults.filter((sensor) => sensor !== PointerSensor),
+          PointerSensor.configure({
+            activationConstraints: [
+              new PointerActivationConstraints.Distance({ value: 6 }),
+            ],
+          }),
+        ]}
+        plugins={(defaults) => defaults.map((plugin) => {
+          if (plugin === Accessibility) {
+            return Accessibility.configure({
+              id: "task-board-dnd",
+              announcements: {
+                dragstart: ({ operation }: DragStartEvent) => `Picked up ${(operation.source?.data.task as Task | undefined)?.title ?? "task"}`,
+                dragover: ({ operation }: DragOverEvent) => operation.target ? `Over ${operation.target.id}` : undefined,
+                dragend: ({ canceled }: DragEndEvent) => canceled ? "Drag cancelled" : "Task dropped",
+              },
+            })
+          }
+          return plugin === Feedback ? Feedback.configure({ dropAnimation: { duration: 0 } }) : plugin
+        })}
+        onDragStart={(_event, manager) => {
+          const feedback = manager.plugins.find((plugin) => plugin instanceof Feedback)
+          if (feedback) feedback.dropAnimation = { duration: 0 }
+        }}
+        onDragEnd={onDragEnd}
+      >
         <div className="flex snap-x gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-3 lg:overflow-visible">{STATUSES.map((status) => <div key={status} className="snap-center"><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} presenceByTask={presenceByTask} lockedByTask={lockedByTask} /></div>)}</div>
-        <DragOverlay dropAnimation={null}>{activeTask && <m.div initial={{ scale: .98, opacity: .7 }} animate={{ scale: 1.02, opacity: 1 }} className="w-[360px] rotate-1 shadow-2xl"><TaskCard task={activeTask} pending={pendingIds.has(activeTask.id)} onStatusChange={moveTask} presence={presenceByTask.get(activeTask.id)} lockedBy={lockedByTask.get(activeTask.id)} /></m.div>}</DragOverlay>
-      </DndContext>}
+        <DragOverlay dropAnimation={null}>{(source) => {
+          const task = source.data.task as Task | undefined
+          return task ? <div className="w-[360px] rotate-1 shadow-2xl"><TaskDragPreview task={task} pending={pendingIds.has(task.id)} /></div> : null
+        }}</DragOverlay>
+      </DragDropProvider>}
     </main>
     <AppFooter />
     <CreateTaskDialog /><TaskDetailsSheet /><ShortcutsDialog />

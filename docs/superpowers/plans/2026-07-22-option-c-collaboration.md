@@ -142,7 +142,15 @@ const lockedBy = presence.find((entry) => entry.taskId === task.id && entry.mode
 - [ ] **Step 3: Disable drag handles, status selectors, and edit forms while locked**
 
 ```tsx
-const sortable = useSortable({ id: task.id, data: { task }, disabled: Boolean(lockedBy) })
+const sortable = useSortable({
+  id: task.id,
+  index,
+  group: task.status,
+  type: "task",
+  accept: "task",
+  data: { task },
+  disabled: Boolean(lockedBy),
+})
 <Select disabled={Boolean(lockedBy)} ... />
 <TaskForm disabled={Boolean(lockedBy)} ... />
 ```

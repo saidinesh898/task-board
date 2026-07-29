@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef } from "react"
-import { useDroppable } from "@dnd-kit/core"
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { useDroppable } from "@dnd-kit/react"
+import { closestCenter } from "@dnd-kit/collision"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -24,7 +24,14 @@ export function TaskColumn({ status, tasks, pendingIds, onStatusChange, presence
   lockedByTask: Map<string, string>
 }) {
   const parentRef = useRef<HTMLDivElement>(null)
-  const droppable = useDroppable({ id: `column-${status}`, data: { status } })
+  const droppable = useDroppable({
+    id: `column-${status}`,
+    type: "column",
+    accept: "task",
+    data: { status },
+    collisionDetector: closestCenter,
+    collisionPriority: 0,
+  })
   const virtualizer = useVirtualizer({
     count: tasks.length,
     getScrollElement: () => parentRef.current,
@@ -40,26 +47,24 @@ export function TaskColumn({ status, tasks, pendingIds, onStatusChange, presence
         <div className="flex items-center gap-2"><span className={cn("size-2 rounded-full", dotStyle[status])} /><h2 className="text-sm font-semibold">{STATUS_LABELS[status]}</h2></div>
         <Badge variant="secondary">{tasks.length}</Badge>
       </header>
-      <div ref={(node) => { parentRef.current = node; droppable.setNodeRef(node) }} className={cn("relative flex-1 overflow-y-auto p-3", droppable.isOver && "bg-primary/5")}>
+      <div ref={(node) => { parentRef.current = node; droppable.ref(node) }} className={cn("relative flex-1 overflow-y-auto p-3", droppable.isDropTarget && "bg-primary/5")}>
         {!tasks.length && <div className="flex h-32 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">Drop tasks here</div>}
-        <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-          <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
-            {virtualizer.getVirtualItems().map((row) => {
-              const task = tasks[row.index]!
-              return (
-                <div
-                  key={task.id}
-                  data-index={row.index}
-                  ref={virtualizer.measureElement}
-                  className="absolute left-0 top-0 w-full pb-3"
-                  style={{ transform: `translateY(${row.start}px)` }}
-                >
-                  <TaskCard task={task} pending={pendingIds.has(task.id)} onStatusChange={onStatusChange} presence={presenceByTask.get(task.id)} lockedBy={lockedByTask.get(task.id)} />
-                </div>
-              )
-            })}
-          </div>
-        </SortableContext>
+        <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+          {virtualizer.getVirtualItems().map((row) => {
+            const task = tasks[row.index]!
+            return (
+              <div
+                key={task.id}
+                data-index={row.index}
+                ref={virtualizer.measureElement}
+                className="absolute left-0 top-0 w-full pb-3"
+                style={{ transform: `translateY(${row.start}px)` }}
+              >
+                <TaskCard task={task} index={row.index} group={status} pending={pendingIds.has(task.id)} onStatusChange={onStatusChange} presence={presenceByTask.get(task.id)} lockedBy={lockedByTask.get(task.id)} />
+              </div>
+            )
+          })}
+        </div>
       </div>
     </section>
   )
