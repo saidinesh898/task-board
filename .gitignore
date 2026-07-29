@@ -14,10 +14,16 @@
 /coverage
 /playwright-report
 /test-results
+/tests/e2e/interview-guide.spec.ts
 
 # next.js
 /.next/
 /out/
+
+# local-only interview guide
+/app/interview-guide/
+/docs/INTERVIEW_CHEAT_SHEET.md
+/features/interview-guide/
 
 # production
 /build
