@@ -90,12 +90,12 @@ function BoardExperience() {
     if (STATUSES.includes(status)) moveTask(task, status, overTask)
   }
 
-  return <div className={styles.style1}>
+  return <div className={styles.boardShell}>
     <AppHeader undo={undo} redo={redo} undoLabel={past.at(-1)?.label} redoLabel={future.at(-1)?.label} onCreate={() => setCreateOpen(true)} onShortcuts={() => setShortcutsOpen(true)} />
     <NetworkStatus />
     <DeveloperTools />
-    <main className={styles.style2}>
-      <div><h1 className={styles.style3}>Thomson Reuters Board</h1><p className={styles.style4}>Optimistic, collaborative, and designed to stay fast at 1,000+ tasks.</p></div>
+    <main className={styles.main}>
+      <div><h1 className={styles.title}>Thomson Reuters Board</h1><p className={styles.subtitle}>Optimistic, collaborative, and designed to stay fast at 1,000+ tasks.</p></div>
       <BoardFilters resultCount={filtered.length} totalCount={tasks.length} />
       {isLoading ? <LoadingBoard /> : <DragDropProvider
         sensors={(defaults) => [
@@ -125,10 +125,10 @@ function BoardExperience() {
         }}
         onDragEnd={onDragEnd}
       >
-        <div className={styles.style5}>{STATUSES.map((status) => <div key={status} className={styles.style6}><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} presenceByTask={presenceByTask} lockedByTask={lockedByTask} /></div>)}</div>
+        <div className={styles.columns}>{STATUSES.map((status) => <div key={status} className={styles.column}><TaskColumn status={status} tasks={grouped[status]} pendingIds={pendingIds} onStatusChange={moveTask} presenceByTask={presenceByTask} lockedByTask={lockedByTask} /></div>)}</div>
         <DragOverlay dropAnimation={null}>{(source) => {
           const task = source.data.task as Task | undefined
-          return task ? <div className={styles.style7}><TaskDragPreview task={task} pending={pendingIds.has(task.id)} /></div> : null
+          return task ? <div className={styles.dragPreview}><TaskDragPreview task={task} pending={pendingIds.has(task.id)} /></div> : null
         }}</DragOverlay>
       </DragDropProvider>}
     </main>
@@ -139,11 +139,11 @@ function BoardExperience() {
 
 function AppHeader({ undo, redo, undoLabel, redoLabel, onCreate, onShortcuts }: { undo: () => void; redo: () => void; undoLabel?: string; redoLabel?: string; onCreate: () => void; onShortcuts: () => void }) {
   const { setTheme } = useTheme()
-  return <header className={styles.style8}><div className={styles.style9}><div className={styles.style10}><div className={styles.style11}><Zap className={styles.style12} fill="currentColor" /></div><span className={styles.style13}>Thomson Reuters Board</span></div>
+  return <header className={styles.header}><div className={styles.headerInner}><div className={styles.brand}><div className={styles.brandMark}><Zap className={styles.icon} fill="currentColor" /></div><span className={styles.brandName}>Thomson Reuters Board</span></div>
     <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" disabled={!undoLabel} onClick={undo} aria-label={undoLabel ? `Undo ${undoLabel}` : "Nothing to undo"} />}><Undo2 /></TooltipTrigger><TooltipContent>{undoLabel ? `Undo: ${undoLabel}` : "Nothing to undo"}</TooltipContent></Tooltip>
     <Tooltip><TooltipTrigger render={<Button variant="ghost" size="icon" disabled={!redoLabel} onClick={redo} aria-label={redoLabel ? `Redo ${redoLabel}` : "Nothing to redo"} />}><Redo2 /></TooltipTrigger><TooltipContent>{redoLabel ? `Redo: ${redoLabel}` : "Nothing to redo"}</TooltipContent></Tooltip>
-    <Button variant="outline" onClick={onShortcuts} aria-label="Keyboard Shortcuts"><Keyboard /><span className={styles.style14}>Keyboard Shortcuts</span><span className={styles.style15}>?</span></Button>
-    <Button variant="outline" nativeButton={false} render={<Link href="/interview-guide" />} aria-label="Open interview guide"><BookOpenCheck /><span className={styles.style16}>Interview guide</span></Button>
+    <Button variant="outline" onClick={onShortcuts} aria-label="Keyboard Shortcuts"><Keyboard /><span className={styles.responsiveLabel}>Keyboard Shortcuts</span><span className={styles.shortcutKey}>?</span></Button>
+    <Button variant="outline" nativeButton={false} render={<Link href="/interview-guide" />} aria-label="Open interview guide"><BookOpenCheck /><span className={styles.desktopLabel}>Interview guide</span></Button>
     <DropdownMenu>
       <Tooltip><TooltipTrigger render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Choose theme" />} />}><Moon /></TooltipTrigger><TooltipContent>Choose theme</TooltipContent></Tooltip>
       <DropdownMenuContent align="end">
@@ -152,21 +152,21 @@ function AppHeader({ undo, redo, undoLabel, redoLabel, onCreate, onShortcuts }: 
         <DropdownMenuItem onClick={() => setTheme("system")}><Laptop />System</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-    <Button onClick={onCreate}><Plus /><span className={styles.style14}>New task</span><span className={styles.style17}>N</span></Button>
+    <Button onClick={onCreate}><Plus /><span className={styles.responsiveLabel}>New task</span><span className={styles.primaryShortcutKey}>N</span></Button>
   </div></header>
 }
 
 function AppFooter() {
-  return <footer className={styles.style18}>
-    <div className={styles.style19}>
-      <p className={styles.style20}>Sai Dinesh</p>
-      <nav aria-label="Owner contact links" className={styles.style21}>
-        <a className={styles.style22} href="mailto:sai_dinesh@epam.com"><Mail className={styles.style12} />sai_dinesh@epam.com</a>
-        <a className={styles.style22} href="https://github.com/saidinesh898/task-board" target="_blank" rel="noreferrer"><FaGithub className={styles.style12} aria-hidden="true" />GitHub</a>
-        <a className={styles.style23} href="https://www.linkedin.com/in/saidineshkumar/" target="_blank" rel="noreferrer"><FaLinkedin className={styles.style12} aria-hidden="true" />LinkedIn</a>
+  return <footer className={styles.footer}>
+    <div className={styles.footerInner}>
+      <p className={styles.ownerName}>Sai Dinesh</p>
+      <nav aria-label="Owner contact links" className={styles.footerLinks}>
+        <a className={styles.footerLink} href="mailto:sai_dinesh@epam.com"><Mail className={styles.icon} />sai_dinesh@epam.com</a>
+        <a className={styles.footerLink} href="https://github.com/saidinesh898/task-board" target="_blank" rel="noreferrer"><FaGithub className={styles.icon} aria-hidden="true" />GitHub</a>
+        <a className={styles.linkedInLink} href="https://www.linkedin.com/in/saidineshkumar/" target="_blank" rel="noreferrer"><FaLinkedin className={styles.icon} aria-hidden="true" />LinkedIn</a>
       </nav>
     </div>
   </footer>
 }
 
-function LoadingBoard() { return <div className={styles.style24}>{STATUSES.map((status) => <div key={status} className={styles.style25}><Skeleton className={styles.style26} />{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className={styles.style27} />)}</div>)}</div> }
+function LoadingBoard() { return <div className={styles.loadingBoard}>{STATUSES.map((status) => <div key={status} className={styles.loadingColumn}><Skeleton className={styles.loadingHeader} />{Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className={styles.loadingCard} />)}</div>)}</div> }

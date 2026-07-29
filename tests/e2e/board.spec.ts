@@ -65,6 +65,8 @@ test("moves a task between columns with the keyboard sensor", async ({ page }) =
   await handle.focus()
   await page.keyboard.press("Space")
   await page.keyboard.press("ArrowRight")
+  await expect(destination).toHaveAttribute("data-drop-active", "true")
+  await expect(destination.getByText("Release to move into In Progress")).toBeVisible()
   await page.keyboard.press("Space")
 
   await expect(source.getByRole("button", { name: `Drag ${title}` })).toHaveCount(0)
@@ -76,6 +78,19 @@ test("developer tools are the source of remote activity", async ({ page }) => {
   await expect(page.getByText("Emulation", { exact: true })).toBeVisible()
   await page.getByRole("button", { name: "Trigger update" }).click()
   await expect(page.getByText(/updated .* recently/)).toBeVisible()
+})
+
+test("developer tool switches render and move when toggled", async ({ page }) => {
+  await page.getByText("DEV TOOLS", { exact: true }).click()
+  const simulationSwitch = page.getByRole("switch", { name: "Toggle automatic simulation" })
+  const thumb = simulationSwitch.locator('[data-slot="switch-thumb"]')
+  const before = await thumb.boundingBox()
+
+  expect(before).not.toBeNull()
+  expect(before!.width).toBeGreaterThan(0)
+  await simulationSwitch.click()
+  await expect(simulationSwitch).toBeChecked()
+  await expect.poll(async () => (await thumb.boundingBox())?.x ?? 0).toBeGreaterThan(before!.x + 6)
 })
 
 test("shows remote presence and locks a task while another user edits", async ({ page }) => {

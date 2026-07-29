@@ -2770,10 +2770,6 @@
   transition-timing-function: var(--tw-ease, var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)));
   transition-duration: var(--tw-duration, var(--default-transition-duration, 150ms));
 }
-.style245 {
-  --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 6px -4px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
-  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-}
 .style246 {
   border-color: color-mix(in srgb, oklch(69.6% 0.17 162.48) 20%, transparent);
   @supports (color: color-mix(in lab, red, red)) {
@@ -3674,4 +3670,65 @@
   50% {
     opacity: 0.5;
   }
+}
+
+.accentViolet {
+  --guide-accent: var(--color-violet-500);
+  --guide-accent-text: var(--color-violet-700);
+  --guide-accent-text-dark: var(--color-violet-300);
+  --guide-accent-solid: var(--color-violet-600);
+}
+
+.accentCyan {
+  --guide-accent: var(--color-cyan-500);
+  --guide-accent-text: var(--color-cyan-700);
+  --guide-accent-text-dark: var(--color-cyan-300);
+  --guide-accent-solid: var(--color-cyan-600);
+}
+
+.accentAmber {
+  --guide-accent: var(--color-amber-500);
+  --guide-accent-text: var(--color-amber-700);
+  --guide-accent-text-dark: var(--color-amber-300);
+  --guide-accent-solid: var(--color-amber-500);
+}
+
+.accentEmerald {
+  --guide-accent: var(--color-emerald-500);
+  --guide-accent-text: var(--color-emerald-700);
+  --guide-accent-text-dark: var(--color-emerald-300);
+  --guide-accent-solid: var(--color-emerald-600);
+}
+
+.accentRose {
+  --guide-accent: var(--color-rose-500);
+  --guide-accent-text: var(--color-rose-700);
+  --guide-accent-text-dark: var(--color-rose-300);
+  --guide-accent-solid: var(--color-rose-600);
+}
+
+.accentText {
+  color: var(--guide-accent-text);
+}
+
+:global(.dark) .accentText {
+  color: var(--guide-accent-text-dark);
+}
+
+.accentSoft {
+  background-color: color-mix(in oklab, var(--guide-accent) 10%, transparent);
+}
+
+.accentBorder {
+  border-color: color-mix(in oklab, var(--guide-accent) 25%, transparent);
+}
+
+.accentSolid {
+  background-color: var(--guide-accent-solid);
+}
+
+.accentGlow {
+  box-shadow:
+    0 10px 15px -3px color-mix(in oklab, var(--guide-accent) 20%, transparent),
+    0 4px 6px -4px color-mix(in oklab, var(--guide-accent) 20%, transparent);
 }

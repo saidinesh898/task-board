@@ -115,40 +115,40 @@ export function TaskDetailsSheet() {
       <Sheet open={!!selectedTaskId} onOpenChange={(open) => {
         if (!open) { setSelectedTaskId(null); setDraft(null); setConflict(null) }
       }}>
-        <SheetContent className={styles.style1}>
-          <SheetHeader className={styles.style2}>
-            <div className={styles.style3}><SheetTitle>{task?.title ?? "Task"}</SheetTitle>{task && <Badge variant="outline">v{task.version}</Badge>}</div>
+        <SheetContent className={styles.sheet}>
+          <SheetHeader className={styles.sheetHeader}>
+            <div className={styles.titleRow}><SheetTitle>{task?.title ?? "Task"}</SheetTitle>{task && <Badge variant="outline">v{task.version}</Badge>}</div>
             <SheetDescription>{task ? `Created ${formatTaskDate(task.createdAt, true)} · last changed by ${task.updatedBy}` : "Loading task"}</SheetDescription>
           </SheetHeader>
-          <div className={styles.style4}>
+          <div className={styles.sheetBody}>
             {conflict && <Alert variant="destructive"><AlertTriangle /><AlertTitle>Newer remote version</AlertTitle><AlertDescription>{conflict.incoming.updatedBy} changed this task while you were editing. Saving will open a comparison.</AlertDescription></Alert>}
             {lockedBy && <Alert><AlertTriangle /><AlertTitle>Editing locked by {lockedBy}</AlertTitle><AlertDescription>You can view this task, but editing controls will unlock only after they leave or stop editing.</AlertDescription></Alert>}
             {task && draft && <TaskForm disabled={Boolean(lockedBy)} value={draft} onChange={updateDraft} onSubmit={save} submitLabel={conflict ? "Review and save" : "Save changes"} />}
-            {devOpen && task && draftDirty && !conflict && <Button variant="outline" className={styles.style5} onClick={() => triggerRemote("conflict", task.id)}><AlertTriangle />Simulate remote conflict</Button>}
-            {task && <div className={styles.style6}><History className={styles.style7} />Version {task.version} · Updated {formatTaskDate(task.updatedAt, true)} UTC</div>}
+            {devOpen && task && draftDirty && !conflict && <Button variant="outline" className={styles.conflictButton} onClick={() => triggerRemote("conflict", task.id)}><AlertTriangle />Simulate remote conflict</Button>}
+            {task && <div className={styles.version}><History className={styles.versionIcon} />Version {task.version} · Updated {formatTaskDate(task.updatedAt, true)} UTC</div>}
           </div>
         </SheetContent>
       </Sheet>
 
       <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
-        <DialogContent className={styles.style8}>
+        <DialogContent className={styles.dialog}>
           <DialogHeader><DialogTitle>Resolve task conflict</DialogTitle><DialogDescription>Choose which version to keep. This saves as one undoable optimistic action.</DialogDescription></DialogHeader>
-          {manualMode && conflict && draft && <div className={styles.style9}>
+          {manualMode && conflict && draft && <div className={styles.conflictList}>
             {conflict.changedFields.map((field) => (
-              <div key={field} className={styles.style10}>
-                <div className={styles.style11}>{field}</div>
-                {field === "description" ? <div className={styles.style12}>
+              <div key={field} className={styles.conflictField}>
+                <div className={styles.fieldName}>{field}</div>
+                {field === "description" ? <div className={styles.descriptionMerge}>
                   <Label htmlFor="merged-description">Merged description</Label>
                   <Textarea id="merged-description" aria-label="Merged description" rows={7} value={manualDescription} onChange={(event) => setManualDescription(event.target.value)} />
-                  <p className={styles.style13}>Concurrent sentence blocks were reconciled deterministically. Review or edit the result before saving.</p>
-                </div> : <div className={styles.style14}>
+                  <p className={styles.hint}>Concurrent sentence blocks were reconciled deterministically. Review or edit the result before saving.</p>
+                </div> : <div className={styles.choices}>
                   <Choice active={choices[field] !== "theirs"} label="Mine" value={draft[field]} onClick={() => setChoices((value) => ({ ...value, [field]: "mine" }))} />
                   <Choice active={choices[field] === "theirs"} label={`Theirs · ${conflict.incoming.updatedBy}`} value={conflict.incoming[field]} onClick={() => setChoices((value) => ({ ...value, [field]: "theirs" }))} />
                 </div>}
               </div>
             ))}
           </div>}
-          <DialogFooter className={styles.style15}>
+          <DialogFooter className={styles.actions}>
             {!manualMode ? <>
               <Button variant="outline" onClick={takeTheirs}>Take theirs</Button>
               <Button variant="secondary" onClick={() => conflict && draft && submit(conflict.incoming, draft, "Resolve")}>Keep mine</Button>
@@ -165,5 +165,5 @@ export function TaskDetailsSheet() {
 }
 
 function Choice({ active, label, value, onClick }: { active: boolean; label: string; value: unknown; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className={`${styles.choice} ${active ? styles.choiceActive : styles.choiceInactive}`}><span className={styles.style16}>{label}</span><span className={styles.style17}>{Array.isArray(value) ? value.join(", ") : String(value)}</span></button>
+  return <button type="button" onClick={onClick} className={`${styles.choice} ${active ? styles.choiceActive : styles.choiceInactive}`}><span className={styles.choiceLabel}>{label}</span><span className={styles.choiceValue}>{Array.isArray(value) ? value.join(", ") : String(value)}</span></button>
 }

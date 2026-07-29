@@ -28,7 +28,7 @@ export function CreateTaskDialog() {
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className={styles.style1}>
+      <DialogContent className={styles.dialog}>
         <DialogHeader><DialogTitle>Create a task</DialogTitle><DialogDescription>Add it now; the simulated API confirms it in two seconds.</DialogDescription></DialogHeader>
         <TaskForm value={draft} onChange={(patch) => setDraft((value) => ({ ...value, ...patch }))} onSubmit={create} submitLabel="Create task" />
       </DialogContent>

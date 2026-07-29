@@ -1,244 +1,86 @@
-.style1 {
+.track {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  border-radius: calc(infinity * 1px);
-  border-style: var(--tw-border-style);
-  border-width: 1px;
-  border-color: transparent;
-  transition-property: all;
-  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)));
-  transition-duration: var(--tw-duration, var(--default-transition-duration, 150ms));
-  --tw-outline-style: none;
-  outline-style: none;
-  &::after {
-    content: var(--tw-content);
-    position: absolute;
-  }
-  &::after {
-    content: var(--tw-content);
-    inset-inline: calc(var(--spacing, 0.25rem) * -3);
-  }
-  &::after {
-    content: var(--tw-content);
-    inset-block: calc(var(--spacing, 0.25rem) * -2);
-  }
-  &:focus-visible {
-    border-color: var(--ring);
-  }
-  &:focus-visible {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-  &:focus-visible {
-    --tw-ring-color: var(--ring);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--ring) 50%, transparent);
-    }
-  }
-  &[aria-invalid="true"] {
-    border-color: var(--destructive);
-  }
-  &[aria-invalid="true"] {
-    --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-  &[aria-invalid="true"] {
-    --tw-ring-color: var(--destructive);
-    @supports (color: color-mix(in lab, red, red)) {
-      --tw-ring-color: color-mix(in oklab, var(--destructive) 20%, transparent);
-    }
-  }
-  &[data-size="default"] {
-    height: 18.4px;
-  }
-  &[data-size="default"] {
-    width: 32px;
-  }
-  &[data-size="sm"] {
-    height: 14px;
-  }
-  &[data-size="sm"] {
-    width: 24px;
-  }
-  &:is(.dark *) {
-    &[aria-invalid="true"] {
-      border-color: var(--destructive);
-      @supports (color: color-mix(in lab, red, red)) {
-        border-color: color-mix(in oklab, var(--destructive) 50%, transparent);
-      }
-    }
-  }
-  &:is(.dark *) {
-    &[aria-invalid="true"] {
-      --tw-ring-color: var(--destructive);
-      @supports (color: color-mix(in lab, red, red)) {
-        --tw-ring-color: color-mix(in oklab, var(--destructive) 40%, transparent);
-      }
-    }
-  }
-  &:where([data-state="checked"]), &:where([data-checked]:not([data-checked="false"])) {
-    background-color: var(--primary);
-  }
-  &:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])) {
-    background-color: var(--input);
-  }
-  &:is(.dark *) {
-    &:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])) {
-      background-color: var(--input);
-      @supports (color: color-mix(in lab, red, red)) {
-        background-color: color-mix(in oklab, var(--input) 80%, transparent);
-      }
-    }
-  }
-  &:where([data-disabled="true"]), &:where([data-disabled]:not([data-disabled="false"])) {
-    cursor: not-allowed;
-  }
-  &:where([data-disabled="true"]), &:where([data-disabled]:not([data-disabled="false"])) {
-    opacity: 50%;
-  }
+  width: 32px;
+  height: 18px;
+  padding: 1px;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  outline: none;
+  background-color: var(--input);
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
-.style2 {
+
+.track::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem -0.75rem;
+}
+
+.track[data-size="sm"] {
+  width: 24px;
+  height: 14px;
+}
+
+.track:focus-visible {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
+}
+
+.track[aria-invalid="true"] {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--destructive) 20%, transparent);
+}
+
+.track[data-state="checked"],
+.track[data-checked]:not([data-checked="false"]) {
+  background-color: var(--primary);
+}
+
+.track[data-disabled]:not([data-disabled="false"]),
+.track:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.thumb {
   pointer-events: none;
   display: block;
-  border-radius: calc(infinity * 1px);
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
   background-color: var(--background);
-  --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  transition-property: transform, translate, scale, rotate;
-  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function, cubic-bezier(0.4, 0, 0.2, 1)));
-  transition-duration: var(--tw-duration, var(--default-transition-duration, 150ms));
-  &:is(:where(.group\/switch)[data-size="default"] *) {
-    width: calc(var(--spacing, 0.25rem) * 4);
-    height: calc(var(--spacing, 0.25rem) * 4);
-  }
-  &:is(:where(.group\/switch)[data-size="sm"] *) {
-    width: calc(var(--spacing, 0.25rem) * 3);
-    height: calc(var(--spacing, 0.25rem) * 3);
-  }
-  &:is(:where(.group\/switch)[data-size="default"] *) {
-    &:where([data-state="checked"]), &:where([data-checked]:not([data-checked="false"])) {
-      --tw-translate-x: calc(100% - 2px);
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-  }
-  &:is(:where(.group\/switch)[data-size="sm"] *) {
-    &:where([data-state="checked"]), &:where([data-checked]:not([data-checked="false"])) {
-      --tw-translate-x: calc(100% - 2px);
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-  }
-  &:is(.dark *) {
-    &:where([data-state="checked"]), &:where([data-checked]:not([data-checked="false"])) {
-      background-color: var(--primary-foreground);
-    }
-  }
-  &:is(:where(.group\/switch)[data-size="default"] *) {
-    &:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])) {
-      --tw-translate-x: 0px;
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-  }
-  &:is(:where(.group\/switch)[data-size="sm"] *) {
-    &:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])) {
-      --tw-translate-x: 0px;
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-  }
-  &:is(.dark *) {
-    &:where([data-state="unchecked"]), &:where([data-unchecked]:not([data-unchecked="false"])) {
-      background-color: var(--foreground);
-    }
-  }
+  box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+  transform: translateX(0);
+  transition: transform 150ms ease, background-color 150ms ease;
 }
-@property --tw-border-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
+
+.track[data-size="sm"] .thumb {
+  width: 12px;
+  height: 12px;
 }
-@property --tw-content {
-  syntax: "*";
-  initial-value: "";
-  inherits: false;
+
+.track[data-state="checked"] .thumb,
+.track[data-checked]:not([data-checked="false"]) .thumb {
+  transform: translateX(12px);
 }
-@property --tw-shadow {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0 0 #0000;
+
+.track[data-size="sm"][data-state="checked"] .thumb,
+.track[data-size="sm"][data-checked]:not([data-checked="false"]) .thumb {
+  transform: translateX(8px);
 }
-@property --tw-shadow-color {
-  syntax: "*";
-  inherits: false;
+
+:global(.dark) .track[data-state="checked"] .thumb,
+:global(.dark) .track[data-checked]:not([data-checked="false"]) .thumb {
+  background-color: var(--primary-foreground);
 }
-@property --tw-shadow-alpha {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 100%;
+
+:global(.dark) .track:not([data-state="checked"]):not([data-checked]) {
+  background-color: color-mix(in oklab, var(--input) 80%, transparent);
 }
-@property --tw-inset-shadow {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0 0 #0000;
-}
-@property --tw-inset-shadow-color {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-inset-shadow-alpha {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 100%;
-}
-@property --tw-ring-color {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-ring-shadow {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0 0 #0000;
-}
-@property --tw-inset-ring-color {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-inset-ring-shadow {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0 0 #0000;
-}
-@property --tw-ring-inset {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-ring-offset-width {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-@property --tw-ring-offset-color {
-  syntax: "*";
-  inherits: false;
-  initial-value: #fff;
-}
-@property --tw-ring-offset-shadow {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0 0 #0000;
-}
-@property --tw-translate-x {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
-@property --tw-translate-y {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
-}
-@property --tw-translate-z {
-  syntax: "*";
-  inherits: false;
-  initial-value: 0;
+
+:global(.dark) .track:not([data-state="checked"]):not([data-checked]) .thumb {
+  background-color: var(--foreground);
 }

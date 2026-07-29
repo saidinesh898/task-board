@@ -30,24 +30,24 @@ export function BoardFilters({ resultCount, totalCount }: { resultCount: number;
     setBuilderOpen(!builderOpen)
   }
   return (
-    <div className={styles.style1}>
-      <div className={styles.style2}>
-        <div className={styles.style3}>
-          <Search className={styles.style4} />
-          <Input disabled={builderOpen} data-task-search="true" value={search} onChange={(event) => setFilter("search", event.target.value)} placeholder={builderOpen ? "Disabled while Advanced is active" : "Search title or description…  /"} className={styles.style5} />
+    <div className={styles.panel}>
+      <div className={styles.controls}>
+        <div className={styles.searchField}>
+          <Search className={styles.searchIcon} />
+          <Input disabled={builderOpen} data-task-search="true" value={search} onChange={(event) => setFilter("search", event.target.value)} placeholder={builderOpen ? "Disabled while Advanced is active" : "Search title or description…  /"} className={styles.searchInput} />
         </div>
-        <div className={styles.style6}>
+        <div className={styles.selectGroup}>
           <Select disabled={builderOpen} value={assignee} onValueChange={(value) => setFilter("assignee", value ?? "all")}>
-            <SelectTrigger aria-label="Filter by person" className={styles.style7}><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Filter by person" className={styles.assigneeSelect}><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="all">All assignees</SelectItem>{PEOPLE.map((person) => <SelectItem key={person} value={person}>{person}</SelectItem>)}</SelectContent>
           </Select>
           <Select disabled={builderOpen} value={priority} onValueChange={(value) => setFilter("priority", value ?? "all")}>
-            <SelectTrigger aria-label="Filter by importance" className={styles.style8}><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All priorities</SelectItem>{PRIORITIES.map((item) => <SelectItem key={item} value={item} className={styles.style9}>{item}</SelectItem>)}</SelectContent>
+            <SelectTrigger aria-label="Filter by importance" className={styles.prioritySelect}><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All priorities</SelectItem>{PRIORITIES.map((item) => <SelectItem key={item} value={item} className={styles.capitalize}>{item}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <Button aria-pressed={builderOpen} variant={advancedCount ? "secondary" : "outline"} onClick={toggleAdvanced}><Braces />Advanced{advancedCount ? ` · ${advancedCount}` : ""}{builderOpen ? <ChevronUp /> : <ChevronDown />}</Button>
-        <span className={styles.style10}>{resultCount.toLocaleString()} of {totalCount.toLocaleString()}</span>
+        <span className={styles.resultCount}>{resultCount.toLocaleString()} of {totalCount.toLocaleString()}</span>
         {filtered && <Button variant="ghost" size="sm" onClick={clearFilters}><X />Clear</Button>}
       </div>
       {builderOpen && <QueryBuilder />}

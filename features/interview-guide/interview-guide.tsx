@@ -35,7 +35,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import {
-  accentClasses,
   allQuestions,
   flows,
   lessons,
@@ -53,6 +52,33 @@ type StoredProgress = {
 }
 
 const PROGRESS_KEY = "task-board:interview-progress:v1"
+
+const accentClasses: Record<
+  Lesson["accent"],
+  {
+    text: string
+    soft: string
+    border: string
+    solid: string
+    glow: string
+  }
+> = {
+  violet: createAccentClasses(styles.accentViolet),
+  cyan: createAccentClasses(styles.accentCyan),
+  amber: createAccentClasses(styles.accentAmber),
+  emerald: createAccentClasses(styles.accentEmerald),
+  rose: createAccentClasses(styles.accentRose),
+}
+
+function createAccentClasses(accent: string) {
+  return {
+    text: cn(accent, styles.accentText),
+    soft: cn(accent, styles.accentSoft),
+    border: cn(accent, styles.accentBorder),
+    solid: cn(accent, styles.accentSolid),
+    glow: cn(accent, styles.accentGlow),
+  }
+}
 
 export function InterviewGuide() {
   const [view, setView] = useState<View>("learn")
@@ -1436,7 +1462,7 @@ function FlowLab() {
                   className={cn(
                     styles.style244,
                     index === step
-                      ? cn(color.border, color.soft, styles.style245, color.glow)
+                      ? cn(color.border, color.soft, color.glow)
                       : index < step
                         ? styles.style246
                         : styles.style247

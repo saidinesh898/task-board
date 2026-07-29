@@ -52,41 +52,41 @@ export const TaskCard = memo(function TaskCard({ task, index, group, pending, on
     <div ref={ref} className={cn(isDragging && styles.dragging)}>
       <Card
         aria-busy={pending}
-        className={styles.style1}
+        className={styles.card}
       >
-        <CardContent className={styles.style2}>
-          <div className={styles.style3}>
+        <CardContent className={styles.content}>
+          <div className={styles.header}>
             <Button
               ref={handleRef}
               variant="ghost"
               size="icon-sm"
-              className={cn(styles.style4, styles.dragHandle)}
+              className={cn(styles.dragButton, styles.dragHandle)}
               aria-label={lockedBy ? `${task.title} is locked by ${lockedBy}` : `Drag ${task.title}`}
               disabled={Boolean(lockedBy)}
             ><GripVertical /></Button>
-            <button className={styles.style5} onClick={() => setSelected(task.id)}>
-              <div className={styles.style6}>
-                <h3 className={styles.style7}>{task.title}</h3>
-                {pending && <Loader2 className={styles.style8} aria-label="Saving" />}
+            <button className={styles.detailsButton} onClick={() => setSelected(task.id)}>
+              <div className={styles.titleRow}>
+                <h3 className={styles.title}>{task.title}</h3>
+                {pending && <Loader2 className={styles.savingIcon} aria-label="Saving" />}
               </div>
-              <p className={styles.style9}>{task.description}</p>
+              <p className={styles.description}>{task.description}</p>
             </button>
           </div>
-          <div className={styles.style10}>
-            <Badge variant="outline" className={cn(styles.style11, priorityStyle[task.priority])}>{task.priority}</Badge>
+          <div className={styles.badges}>
+            <Badge variant="outline" className={cn(styles.priorityBadge, priorityStyle[task.priority])}>{task.priority}</Badge>
             {task.tags.slice(0, 2).map((tag) => <Badge variant="secondary" key={tag}>{tag}</Badge>)}
           </div>
-          <div className={styles.style12}>
+          <div className={styles.presenceRow}>
             <PresenceIndicators entries={presence} />
-            {lockedBy && <span className={styles.style13}>Locked by {lockedBy}</span>}
+            {lockedBy && <span className={styles.lockBadge}>Locked by {lockedBy}</span>}
           </div>
-          <div className={styles.style14}>
-            <span className={styles.style15}><CircleUserRound className={styles.style16} /><span className={styles.style17}>{task.assignee}</span></span>
-            <span className={styles.style18} title={formatTaskDate(task.createdAt, true)}><CalendarDays className={styles.style16} />{formatTaskDate(task.createdAt)}</span>
+          <div className={styles.metadata}>
+            <span className={styles.assignee}><CircleUserRound className={styles.metaIcon} /><span className={styles.assigneeName}>{task.assignee}</span></span>
+            <span className={styles.date} title={formatTaskDate(task.createdAt, true)}><CalendarDays className={styles.metaIcon} />{formatTaskDate(task.createdAt)}</span>
           </div>
-          <div className={styles.style19}>
+          <div className={styles.status}>
             <Select items={STATUS_LABELS} disabled={Boolean(lockedBy)} value={task.status} onValueChange={(status) => status && onStatusChange(task, status)}>
-              <SelectTrigger className={styles.style20} aria-label={`Change status for ${task.title}`}><SelectValue /></SelectTrigger>
+              <SelectTrigger className={styles.statusSelect} aria-label={`Change status for ${task.title}`}><SelectValue /></SelectTrigger>
               <SelectContent>{STATUSES.map((status) => <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>)}</SelectContent>
             </Select>
           </div>
@@ -98,22 +98,22 @@ export const TaskCard = memo(function TaskCard({ task, index, group, pending, on
 
 export function TaskDragPreview({ task, pending }: { task: Task; pending: boolean }) {
   return (
-    <Card aria-busy={pending} className={styles.style21}>
-      <CardContent className={styles.style2}>
-        <div className={styles.style3}>
-          <div className={styles.style22}>
-            <GripVertical className={styles.style23} />
+    <Card aria-busy={pending} className={styles.previewCard}>
+      <CardContent className={styles.content}>
+        <div className={styles.header}>
+          <div className={styles.previewHandle}>
+            <GripVertical className={styles.previewIcon} />
           </div>
-          <div className={styles.style24}>
-            <div className={styles.style6}>
-              <h3 className={styles.style7}>{task.title}</h3>
-              {pending && <Loader2 className={styles.style8} aria-label="Saving" />}
+          <div className={styles.previewDetails}>
+            <div className={styles.titleRow}>
+              <h3 className={styles.title}>{task.title}</h3>
+              {pending && <Loader2 className={styles.savingIcon} aria-label="Saving" />}
             </div>
-            <p className={styles.style9}>{task.description}</p>
+            <p className={styles.description}>{task.description}</p>
           </div>
         </div>
-        <div className={styles.style10}>
-          <Badge variant="outline" className={cn(styles.style11, priorityStyle[task.priority])}>{task.priority}</Badge>
+        <div className={styles.badges}>
+          <Badge variant="outline" className={cn(styles.priorityBadge, priorityStyle[task.priority])}>{task.priority}</Badge>
           {task.tags.slice(0, 2).map((tag) => <Badge variant="secondary" key={tag}>{tag}</Badge>)}
         </div>
       </CardContent>
